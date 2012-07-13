@@ -1,5 +1,7 @@
 #include <string>
 #include <vector>
+#include <poll.h>
+#include <assert.h>
 
 #include "socket.hh"
 
@@ -56,15 +58,56 @@ int main( void )
     printf( "LTE %d = %s\n", i, target.back().str().c_str() );
   }
 
-  /* Send and get timestamp */
-  ethernet_socket.send( Socket::Packet( target[ 1 ], "Hello." ) );
-  uint64_t ts_sent = Socket::timestamp();
+  /* Send and get timestamps */
+  const uint64_t NUM_PACKETS = 10000;
 
-  Socket::Packet rec = lte_socket[ 1 ].recv();
+  struct pollfd pollfds[ 3 ];
+  for ( int i = 0; i < 3; i++ ) {
+    pollfds[ i ].fd = lte_socket[ i ].get_sock();
+    pollfds[ i ].events = POLLIN;
+  }
 
-  uint64_t latency = rec.timestamp - ts_sent;
+  const int MAX_OUTSTANDING = 30;
+  vector<int> num_outstanding( 3, 0 );
 
-  printf( "Latency: %.10f ms\n", latency / 1000000.0 );
+  vector<uint64_t> sent_times( NUM_PACKETS );
 
-  return 0;
+  uint64_t packets_sent = 0;
+
+  while ( packets_sent < NUM_PACKETS ) {
+    /* send packet if any receivers can be replenished */
+    for ( int i = 0; i < 3; i++ ) {
+      if ( num_outstanding[ i ] < MAX_OUTSTANDING ) {
+	int packets_to_send = MAX_OUTSTANDING - num_outstanding[ i ];
+	for ( int pnum = 0; pnum < packets_to_send; pnum++ ) {
+	  char *seq_encoded = (char *)&packets_sent;
+	  ethernet_socket.send( Socket::Packet( target[ i ], string( seq_encoded, sizeof( packets_sent ) ) ) );
+	  sent_times[ packets_sent ] = Socket::timestamp();
+	  packets_sent++;
+	  num_outstanding[ i ]++;
+	}
+      }
+    }
+
+    /* now, poll */
+    if ( poll( pollfds, 3, -1 ) <= 0 ) {
+      perror( "poll" );
+      exit( 1 );
+    }
+    
+    for ( int i = 0; i < 3; i++ ) {
+      if ( pollfds[ i ].revents & POLLERR ) {
+	fprintf( stderr, "Error on LTE %d\n", i );
+	exit( 1 );
+      }
+
+      if ( pollfds[ i ].revents & POLLIN ) {
+	Socket::Packet rec = lte_socket[ i ].recv();
+	assert ( rec.payload.size() == sizeof( packets_sent ) );
+	uint64_t seq = *(uint64_t *)rec.payload.data();
+	fprintf( stderr, "%d %ld %ld %ld\n", i, seq, sent_times[ seq ], rec.timestamp );
+	num_outstanding[ i ]--;
+      }
+    }
+  }
 }
