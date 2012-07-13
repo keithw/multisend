@@ -1,37 +1,60 @@
+#include <string>
+#include <vector>
+
 #include "socket.hh"
+
+using namespace std;
+
+Socket::Address get_nat_addr( const Socket & sender, const Socket::Address & dest,
+			      const Socket & receiver )
+{
+  char buf[ 10 ];
+  for ( int i = 0; i < 10; i++ ) {
+    buf[ i ] = rand() % 256;
+  }
+  
+  string to_send( buf, 10 );
+
+  sender.send( Socket::Packet( dest, to_send ) );
+  Socket::Packet received( receiver.recv() );
+
+  if ( received.payload != to_send ) {
+    fprintf( stderr, "Bad packet received while getting NAT addresses.\n" );
+    exit( 1 );
+  }
+
+  return received.addr;
+}
 
 int main( void )
 {
-  Socket lte1_socket, lte2_socket, lte3_socket, ethernet_socket;
-
+  /* Create and bind Ethernet socket */
+  Socket ethernet_socket;
   Socket::Address ethernet_address( "128.30.76.255", 9000 );
-  Socket::Address lte1_local_address( "10.100.1.1", 9001 );
-  Socket::Address lte2_local_address( "10.100.2.1", 9002 );
-  Socket::Address lte3_local_address( "10.100.3.1", 9003 );
-
   ethernet_socket.bind( ethernet_address );
-  lte1_socket.bind( lte1_local_address );
-  lte2_socket.bind( lte2_local_address );
-  lte3_socket.bind( lte3_local_address );
-
   ethernet_socket.bind_to_device( "eth0" );
-  lte1_socket.bind_to_device( "usb0" );
-  lte2_socket.bind_to_device( "usb1" );
-  lte3_socket.bind_to_device( "usb2" );
 
-  lte1_socket.send( Socket::Packet( ethernet_address, "Hello." ) );
+  /* Create and bind three LTE sockets */
+  vector<Socket> lte_socket;
 
-  Socket::Packet received( ethernet_socket.recv() );
+  for ( int i = 0; i < 3; i++ ) {
+    lte_socket.push_back( Socket() );
+  }
 
-  printf( "From %s got \"%s\".\n", received.addr.str().c_str(), received.payload.c_str() );
+  lte_socket[ 0 ].bind( Socket::Address( "10.100.1.1", 9001 ) );
+  lte_socket[ 0 ].bind_to_device( "usb0" );
+  lte_socket[ 1 ].bind( Socket::Address( "10.100.2.1", 9002 ) );
+  lte_socket[ 1 ].bind_to_device( "usb1" );
+  lte_socket[ 2 ].bind( Socket::Address( "10.100.3.1", 9003 ) );
+  lte_socket[ 2 ].bind_to_device( "usb2" );
 
-  sleep( 2 );
-
-  ethernet_socket.send( Socket::Packet( received.addr, "Goodbye." ) );
-
-  Socket::Packet received2( lte1_socket.recv() );
-
-  printf( "From %s got \"%s\".\n", received2.addr.str().c_str(), received2.payload.c_str() );
+  /* Figure out the NAT addresses of each of the three LTE sockets */
+  vector<Socket::Address> target;
+  
+  for ( int i = 0; i < 3; i++ ) {
+    target.push_back( get_nat_addr( lte_socket[ i ], ethernet_address, ethernet_socket ) );
+    printf( "LTE %d = %s\n", i, target.back().str().c_str() );
+  }
 
   return 0;
 }

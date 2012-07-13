@@ -30,7 +30,7 @@ public:
   };
 
 private:
-  const int sock;
+  int sock;
 
 public:
   Socket();
