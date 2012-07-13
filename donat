@@ -1,0 +1,34 @@
+#!/usr/bin/perl -w
+
+use strict;
+
+my @script = ( q[iptables -t nat -F],
+	       q[iptables -F],
+	       q[iptables -t nat -A POSTROUTING -o rmnet1 -j MASQUERADE],
+	       q[iptables -A FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT -i rmnet1 -o rndis0],
+	       q[iptables -A FORWARD -j ACCEPT -o rmnet1 -i rndis0],
+	       q[ifconfig rndis0 10.100.DEVICENUM.2 netmask 255.255.255.0 up],
+	       q[echo 1 > /proc/sys/net/ipv4/ip_forward] );
+
+my @devs = ( 'x', 'usb0', 'usb1', 'usb2' );
+
+for my $device ( qw[A B C] ) {
+  my ( $num ) = $device =~ tr{ABC}{123}r;
+  my $dev = $devs[ $num ];
+
+  for my $line ( @script ) {
+    my $linemod = $line;
+    $linemod =~ s{DEVICENUM}{$num}g;
+    my $str = qq{./runon $device shell su -c "$linemod"};
+    print "$str\n";
+    system( $str );
+  }
+  system( "sudo ifconfig $dev 10.100.$num.1 netmask 255.255.255.0" );
+  system( "sudo route add -net default gw 10.100.$num.2 metric 2" );
+  system( "echo 0 | sudo tee /proc/sys/net/ipv4/conf/$dev/rp_filter" );
+  system( "echo 1 | sudo tee /proc/sys/net/ipv4/conf/$dev/accept_local" );
+}
+
+# A: 8a:71:5f:ef:c7:5e
+# B: 0a:8d:31:bb:7c:96
+# C: 6a:f6:8e:83:a7:7e

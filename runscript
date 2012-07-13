@@ -1,0 +1,12 @@
+#!/usr/bin/perl -w
+
+use strict;
+
+my ( $device, $script ) = @ARGV;
+
+open SCRIPT, $script or die;
+
+while ( <SCRIPT> ) {
+  chomp;
+  system( './runon', $device, 'shell', $_ );
+}
