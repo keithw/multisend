@@ -56,5 +56,15 @@ int main( void )
     printf( "LTE %d = %s\n", i, target.back().str().c_str() );
   }
 
+  /* Send and get timestamp */
+  ethernet_socket.send( Socket::Packet( target[ 1 ], "Hello." ) );
+  uint64_t ts_sent = Socket::timestamp();
+
+  Socket::Packet rec = lte_socket[ 1 ].recv();
+
+  uint64_t latency = rec.timestamp - ts_sent;
+
+  printf( "Latency: %.10f ms\n", latency / 1000000.0 );
+
   return 0;
 }

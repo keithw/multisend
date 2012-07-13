@@ -115,3 +115,16 @@ Socket::Packet Socket::recv( void ) const
 			 string( msg_payload, received_len ),
 			 *(struct timespec *)CMSG_DATA( ts_hdr ) );
 }
+
+uint64_t Socket::timestamp( void )
+{
+  struct timespec ts;
+
+  if ( clock_gettime( CLOCK_REALTIME, &ts ) < 0 ) {
+    perror( "clock_gettime" );
+    exit( 1 );
+  }
+
+  uint64_t ret = ts.tv_sec * 1000000000 + ts.tv_nsec;
+  return ret;
+}

@@ -8,6 +8,8 @@
 
 class Socket {
 public:
+  static uint64_t timestamp( void );
+
   class Address {
   private:
     struct sockaddr_in _sockaddr;
