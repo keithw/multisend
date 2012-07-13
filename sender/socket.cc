@@ -3,6 +3,7 @@
 #include <arpa/inet.h>
 #include <sys/types.h>
 #include <stdio.h>
+#include <assert.h>
 
 #include "socket.hh"
 
@@ -32,6 +33,14 @@ Socket::Socket()
 {
   if ( sock < 0 ) {
     perror( "socket" );
+    exit( 1 );
+  }
+
+  /* Ask for timestamps */
+  int ts_opt = 1;
+  if ( setsockopt( sock, SOL_SOCKET, SO_TIMESTAMPNS, &ts_opt, sizeof( ts_opt ) )
+       < 0 ) {
+    perror( "setsockopt" );
     exit( 1 );
   }
 }
@@ -65,16 +74,28 @@ void Socket::bind_to_device( const std::string & name ) const
 
 Socket::Packet Socket::recv( void ) const
 {
-  const unsigned int BUF_SIZE = 2048;
-  char buf[ BUF_SIZE ];
-  
+  /* data structure to receive timestamp, source address, and payload */
   struct sockaddr_in remote_addr;
-  socklen_t addrlen = sizeof( remote_addr );
+  struct msghdr header;
+  struct iovec msg_iovec;
 
-  ssize_t received_len = recvfrom( sock, buf, BUF_SIZE, 0, (sockaddr *)&remote_addr, &addrlen );
+  const int BUF_SIZE = 2048;
 
+  char msg_payload[ BUF_SIZE ];
+  char msg_control[ BUF_SIZE ];
+  header.msg_name = &remote_addr;
+  header.msg_namelen = sizeof( remote_addr );
+  msg_iovec.iov_base = msg_payload;
+  msg_iovec.iov_len = BUF_SIZE;
+  header.msg_iov = &msg_iovec;
+  header.msg_iovlen = 1;
+  header.msg_control = msg_control;
+  header.msg_controllen = BUF_SIZE;
+  header.msg_flags = 0;
+
+  ssize_t received_len = recvmsg( sock, &header, 0 );
   if ( received_len < 0 ) {
-    perror( "recvfrom" );
+    perror( "recvmsg" );
     exit( 1 );
   }
 
@@ -84,6 +105,13 @@ Socket::Packet Socket::recv( void ) const
     exit( 1 );
   }
 
+  /* verify presence of timestamp */
+  struct cmsghdr *ts_hdr = CMSG_FIRSTHDR( &header );
+  assert( ts_hdr );
+  assert( ts_hdr->cmsg_level == SOL_SOCKET );
+  assert( ts_hdr->cmsg_type == SO_TIMESTAMPNS );
+
   return Socket::Packet( Socket::Address( remote_addr ),
-			 string( buf, received_len ) );
+			 string( msg_payload, received_len ),
+			 *(struct timespec *)CMSG_DATA( ts_hdr ) );
 }

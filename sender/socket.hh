@@ -4,6 +4,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <string>
+#include <time.h>
 
 class Socket {
 public:
@@ -23,9 +24,14 @@ public:
   public:
     Address addr;
     std::string payload;
+    uint64_t timestamp;
 
     Packet( const Address &s_addr, const std::string &s_payload )
-      : addr( s_addr ), payload( s_payload )
+      : addr( s_addr ), payload( s_payload ), timestamp( 0 )
+    {}
+
+    Packet( const Address &s_addr, const std::string &s_payload, const struct timespec &ts )
+      : addr( s_addr ), payload( s_payload ), timestamp( ts.tv_sec * 1000000000 + ts.tv_nsec )
     {}
   };
 
