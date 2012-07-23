@@ -4,7 +4,7 @@
 #include <assert.h>
 
 #include "socket.hh"
-#include "hist.hh"
+#include "rate-estimate.hh"
 
 using namespace std;
 
@@ -52,61 +52,15 @@ int main( void )
   Socket::Address target( get_nat_addr( lte_socket, ethernet_address, ethernet_socket ) );
   fprintf( stderr, "LTE = %s\n", target.str().c_str() );
 
-  /* Send packets and timestamps */
-  const int MAX_PACKETS_EN_ROUTE = 4800, PACKET_SIZE = 400;
-  int packets_en_route = 0;
-  int packets_sent = 0, packets_received = 0;
-
-  const int PACKETS_TO_SEND = 100000;
-
-  struct pdata {
-    uint64_t seq, ts;
-    int pid;
-  };
-
-  assert( sizeof( struct pdata ) <= (size_t) PACKET_SIZE );
-
-  pid_t mypid = getpid();
-
-  uint64_t last_ts = 0;
-
-  Histogram interarrival_hist( 1000 * 100 ); /* 100 us */
-
-  while ( packets_received < PACKETS_TO_SEND ) {
-    while ( packets_en_route < MAX_PACKETS_EN_ROUTE ) {
-      struct pdata outgoing;
-      outgoing.seq = packets_sent++;
-      outgoing.ts = Socket::timestamp();
-      outgoing.pid = mypid;
-      Socket::Packet pack( target, string( (char *) &outgoing, PACKET_SIZE ) );
-      ethernet_socket.send( pack );
-      packets_en_route++;
-    }
-
-    /* Receive packet */
-    Socket::Packet pack( lte_socket.recv() );
-    struct pdata *contents = (struct pdata *) pack.payload.data();
-    if ( contents->pid == mypid ) {
-      //      uint64_t e2e_delay = pack.timestamp - contents->ts;
-      uint64_t inter_delay = 0;
-
-      if ( last_ts > 0 ) {
-	inter_delay = pack.timestamp - last_ts;
-	interarrival_hist.record( inter_delay );
-      }
-
-      if ( last_ts / 1000000000 != pack.timestamp / 1000000000 ) {
-	fprintf( stderr, "Status: %d packets sent, %d received (%.2f%%)\n", packets_sent,
-		 packets_received,
-		 (double) packets_received * 100.0 / (double) packets_sent );	
-      }
-
-      last_ts = pack.timestamp;
-
-      packets_en_route--;
-      packets_received++;
+  RateEstimate anirudh( 1.0, 20 );
+  
+  const unsigned int MAX_PACKETS_OUTSTANDING = 500;
+  const unsigned int PACKET_SIZE = 1000;
+  unsigned int packets_outstanding = 0;
+  
+  while ( 1 ) {
+    while ( packets_outstanding < MAX_PACKETS_OUTSTANDING ) {
+      
     }
   }
-
-  interarrival_hist.print();
 }
