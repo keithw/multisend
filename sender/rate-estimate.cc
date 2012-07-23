@@ -19,7 +19,7 @@ double RateEstimate::get_rate( void )
 {
   housekeeping();
   const int num_packets = history.size();
-  if ( num_packets == 0 ) {
+  if ( num_packets <= 2 ) {
     return empty_rate_estimate;
   }
 
