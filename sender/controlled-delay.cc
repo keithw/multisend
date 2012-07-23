@@ -2,6 +2,8 @@
 #include <vector>
 #include <poll.h>
 #include <assert.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include "socket.hh"
 #include "rate-estimate.hh"
@@ -52,15 +54,32 @@ int main( void )
   Socket::Address target( get_nat_addr( lte_socket, ethernet_address, ethernet_socket ) );
   fprintf( stderr, "LTE = %s\n", target.str().c_str() );
 
-  RateEstimate anirudh( 1.0, 20 );
+  RateEstimate rate_estimator( 1.0, 500 );
   
   const unsigned int MAX_PACKETS_OUTSTANDING = 500;
-  const unsigned int PACKET_SIZE = 1000;
+  const unsigned int PACKET_SIZE = 600;
   unsigned int packets_outstanding = 0;
-  
+  unsigned int packets_sent = 0;
+
+  int my_pid = (int) getpid();
+
   while ( 1 ) {
     while ( packets_outstanding < MAX_PACKETS_OUTSTANDING ) {
-      
+      Payload outgoing;
+      outgoing.sequence_number = packets_sent++;
+      outgoing.sent_timestamp = Socket::timestamp();
+      outgoing.process_id = my_pid;
+      ethernet_socket.send( Socket::Packet( target, outgoing.str( PACKET_SIZE ) ) );
+      packets_outstanding++;
+    }
+
+    Socket::Packet incoming( lte_socket.recv() );
+    Payload *contents = (Payload *) incoming.payload.data();
+    contents->recv_timestamp = incoming.timestamp;
+    if ( contents->process_id == my_pid ) {
+      rate_estimator.add_packet( *contents );
+      printf( "Rate estimate: %f packets per second [%d sent]\n", rate_estimator.get_rate(), packets_sent );
+      packets_outstanding--;
     }
   }
 }
