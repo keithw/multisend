@@ -4,9 +4,11 @@
 #include <assert.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <deque>
 
 #include "socket.hh"
 #include "rate-estimate.hh"
+#include "history.hh"
 
 using namespace std;
 
@@ -54,19 +56,21 @@ int main( void )
   Socket::Address target( get_nat_addr( lte_socket, ethernet_address, ethernet_socket ) );
   fprintf( stderr, "LTE = %s\n", target.str().c_str() );
 
-  RateEstimate rate_estimator( 1.0, 1000 );
+  RateEstimate rate_estimator( 50.0, 1000 );
   
-  const unsigned int PACKET_SIZE = 600;
-  unsigned int packets_outstanding = 0;
+  const unsigned int PACKET_SIZE = 1400;
   unsigned int packets_sent = 0;
+  unsigned int packets_received = 0;
 
-  const double QUEUE_DURATION_TARGET = 2.0;
-  const double STEERING_TIME = 1.0;
+  const double QUEUE_DURATION_TARGET = .5;
+  const double STEERING_TIME = 0.5;
 
   int my_pid = (int) getpid();
 
   uint64_t next_transmission = Socket::timestamp();
   uint64_t last_transmission = next_transmission;
+
+  History hist;
 
   while ( 1 ) {
     fflush( NULL );
@@ -78,7 +82,7 @@ int main( void )
     /* Q: When will queue hit our target? */
     /* Step 1: Estimate queue size in ms */
 
-    double queue_duration_estimate = (double) packets_outstanding / rate_estimator.get_rate(); /* in seconds */
+    double queue_duration_estimate = (double) hist.num_outstanding() / rate_estimator.get_rate(); /* in seconds */
 
     /* Step 2: At what rate, will queue duration hit the target exactly STEERING_TIME seconds in the future? */
 
@@ -105,7 +109,7 @@ int main( void )
       outgoing.sent_timestamp = Socket::timestamp();
       outgoing.process_id = my_pid;
       ethernet_socket.send( Socket::Packet( target, outgoing.str( PACKET_SIZE ) ) );
-      packets_outstanding++;
+      hist.packet_sent( outgoing );
       last_transmission = outgoing.sent_timestamp;
     }
 
@@ -138,11 +142,19 @@ int main( void )
       contents->recv_timestamp = incoming.timestamp;
       if ( contents->process_id == my_pid ) {
 	rate_estimator.add_packet( *contents );
-	packets_outstanding--;
-	printf( "delay = %f recvrate = %f sendrate = %f queueest = %f\n", (contents->recv_timestamp - contents->sent_timestamp) / 1.0e6,
+	hist.packet_received( *contents );
+	packets_received++;
+	int packets_lost = packets_sent - packets_received;
+	double loss_rate = (double) packets_lost / (double) packets_sent;
+	printf( "delay = %f recvrate = %f sendrate = %f queueest = %f outstanding = %d Mbps = %f lost = %.3f%% arrivetick = %ld\n",
+		(contents->recv_timestamp - contents->sent_timestamp) / 1.0e6,
 		rate_estimator.get_rate(),
 		extra_packet_rate,
-		(double) packets_outstanding / rate_estimator.get_rate() );
+		(double) hist.num_outstanding() / rate_estimator.get_rate(),
+		hist.num_outstanding(),
+		rate_estimator.get_rate() * PACKET_SIZE * 8.0 / 1.0e6,
+		loss_rate * 100,
+		contents->recv_timestamp / 100000 - 13432064006680 );
       }
     }
   }
