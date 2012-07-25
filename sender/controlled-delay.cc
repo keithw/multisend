@@ -62,8 +62,8 @@ int main( void )
   unsigned int packets_sent = 0;
   unsigned int packets_received = 0;
 
-  const double QUEUE_DURATION_TARGET = .5;
-  const double STEERING_TIME = 0.5;
+  const double QUEUE_DURATION_TARGET = 1.0;
+  const double STEERING_TIME = 0.05;
 
   int my_pid = (int) getpid();
 
@@ -71,6 +71,8 @@ int main( void )
   uint64_t last_transmission = next_transmission;
 
   History hist;
+
+  const double minimum_rate = 5; /* packets per second */
 
   while ( 1 ) {
     fflush( NULL );
@@ -91,6 +93,10 @@ int main( void )
 
     double extra_packets_needed = queue_duration_difference * rate_estimator.get_rate() + STEERING_TIME * rate_estimator.get_rate();
     double extra_packet_rate = extra_packets_needed / STEERING_TIME; /* packets per second */
+
+    if ( extra_packet_rate < minimum_rate ) {
+      extra_packet_rate = minimum_rate;
+    }
 
     uint64_t interpacket_delay = 1.e9 / extra_packet_rate;
 
