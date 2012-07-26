@@ -9,7 +9,7 @@
 #include "socket.hh"
 #include "rate-estimate.hh"
 #include "history.hh"
-
+#define EMULATE
 using namespace std;
 
 Socket::Address get_nat_addr( const Socket & sender, const Socket::Address & dest,
@@ -42,15 +42,26 @@ int main( void )
 {
   /* Create and bind Ethernet socket */
   Socket ethernet_socket;
+ #ifdef EMULATE
+  Socket::Address ethernet_address( "127.0.0.1", 9000 );
+  ethernet_socket.bind( ethernet_address );
+  ethernet_socket.bind_to_device( "lo" );
+ #else 
   Socket::Address ethernet_address( "128.30.76.255", 9000 );
   ethernet_socket.bind( ethernet_address );
   ethernet_socket.bind_to_device( "eth0" );
+ #endif
 
   /* Create and bind LTE socket */
   Socket lte_socket;
 
+ #ifdef EMULATE
+  lte_socket.bind( Socket::Address( "127.0.0.1", 9001 ) );
+  lte_socket.bind_to_device( "lo" );
+ #else 
   lte_socket.bind( Socket::Address( "10.100.1.1", 9001 ) );
   lte_socket.bind_to_device( "usb0" );
+ #endif
 
   /* Figure out the NAT addresses of each of the three LTE sockets */
   Socket::Address target( get_nat_addr( lte_socket, ethernet_address, ethernet_socket ) );
