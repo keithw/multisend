@@ -5,8 +5,10 @@
 
 #include "delay-servo.hh"
 
-DelayServo::DelayServo( const Socket & s_sender, const Socket::Address & s_target, const Socket & s_receiver )
-  : _sender( s_sender ),
+DelayServo::DelayServo( const std::string & s_name, const Socket & s_sender,
+			const Socket::Address & s_target, const Socket & s_receiver )
+  : _name( s_name ), 
+    _sender( s_sender ),
     _target( s_target ),
     _receiver( s_receiver ),
     _rate_estimator( 5.0, 1000 ),
@@ -35,7 +37,8 @@ void DelayServo::recv( void )
     _hist.packet_received( *contents );
     _packets_received++;
     double loss_rate = (double) _hist.num_lost() / (double) _packets_sent;
-    printf( "seq = %d delay = %f recvrate = %f queueest = %f outstanding = %d Mbps = %f lost = %.5f%% arrivemilli = %ld\n",
+    printf( "%s seq = %d delay = %f recvrate = %f queueest = %f outstanding = %d Mbps = %f lost = %.5f%% arrivemilli = %ld\n",
+	    _name.c_str(),
 	    contents->sequence_number,
 	    (double) (contents->recv_timestamp - contents->sent_timestamp) / 1.0e9,
 	    _rate_estimator.get_rate(),

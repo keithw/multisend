@@ -1,12 +1,16 @@
 #ifndef DELAY_SERVO_HH
 #define DELAY_SERVO_HH
 
+#include <string>
+
 #include "socket.hh"
 #include "rate-estimate.hh"
 #include "history.hh"
 
 class DelayServo {
 private:
+
+  const std::string _name;
 
   const Socket & _sender;
   const Socket::Address & _target;
@@ -29,7 +33,8 @@ private:
 
 public:
 
-  DelayServo( const Socket & s_sender, const Socket::Address & s_target, const Socket & s_receiver );
+  DelayServo( const std::string & s_name, const Socket & s_sender,
+	      const Socket::Address & s_target, const Socket & s_receiver );
 
   void tick( void );
   void recv( void );

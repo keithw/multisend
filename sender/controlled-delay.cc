@@ -64,27 +64,35 @@ int main( void )
   Socket::Address target( get_nat_addr( lte_socket, ethernet_address, ethernet_socket ) );
   fprintf( stderr, "LTE = %s\n", target.str().c_str() );
 
-  DelayServo controlled_delay( ethernet_socket, target, lte_socket );
+  DelayServo downlink( "DOWN", ethernet_socket, target, lte_socket );
+  DelayServo uplink( "UP  ", lte_socket, ethernet_address, ethernet_socket );
 
   while ( 1 ) {
     fflush( NULL );
 
     /* possibly send packet */
-    controlled_delay.tick();
+    downlink.tick();
+    uplink.tick();
     
     /* wait for incoming packet OR expiry of timer */
-    struct pollfd poll_fds[ 1 ];
-    poll_fds[ 0 ].fd = controlled_delay.fd();
+    struct pollfd poll_fds[ 2 ];
+    poll_fds[ 0 ].fd = downlink.fd();
     poll_fds[ 0 ].events = POLLIN;
+    poll_fds[ 1 ].fd = uplink.fd();
+    poll_fds[ 1 ].events = POLLIN;
 
     struct timespec timeout;
-    uint64_t next_transmission_delay = controlled_delay.wait_time_ns();
+    uint64_t next_transmission_delay = std::min( uplink.wait_time_ns(), downlink.wait_time_ns() );
     timeout.tv_sec = next_transmission_delay / 1000000000;
     timeout.tv_nsec = next_transmission_delay % 1000000000;
-    ppoll( poll_fds, 1, &timeout, NULL );
+    ppoll( poll_fds, 2, &timeout, NULL );
 
     if ( poll_fds[ 0 ].revents & POLLIN ) {
-      controlled_delay.recv();
+      downlink.recv();
+    }
+
+    if ( poll_fds[ 1 ].revents & POLLIN ) {
+      uplink.recv();
     }
   }
 }
