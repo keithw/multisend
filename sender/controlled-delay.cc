@@ -9,7 +9,6 @@
 #include "socket.hh"
 #include "rate-estimate.hh"
 #include "history.hh"
-#define EMULATE
 using namespace std;
 
 Socket::Address get_nat_addr( const Socket & sender, const Socket::Address & dest,
@@ -85,6 +84,8 @@ int main( void )
 
   const double minimum_rate = 5; /* packets per second */
 
+  uint64_t first_microtick = -1;
+
   while ( 1 ) {
     fflush( NULL );
     
@@ -157,13 +158,16 @@ int main( void )
       Socket::Packet incoming( lte_socket.recv() );
       Payload *contents = (Payload *) incoming.payload.data();
       contents->recv_timestamp = incoming.timestamp;
+      if ( first_microtick == uint64_t(-1) ) {
+	first_microtick = contents->recv_timestamp / 1000;
+      }
       if ( contents->process_id == my_pid ) {
 	rate_estimator.add_packet( *contents );
 	hist.packet_received( *contents );
 	packets_received++;
-	int packets_lost = packets_sent - packets_received;
-	double loss_rate = (double) packets_lost / (double) packets_sent;
-	printf( "delay = %f recvrate = %f sendrate = %f queueest = %f outstanding = %d Mbps = %f lost = %.3f%% arrivetick = %ld\n",
+	double loss_rate = (double) hist.num_lost() / (double) packets_sent;
+	printf( "seq = %d delay = %f recvrate = %f sendrate = %f queueest = %f outstanding = %d Mbps = %f lost = %.5f%% arrivemicro = %ld\n",
+		contents->sequence_number,
 		(contents->recv_timestamp - contents->sent_timestamp) / 1.0e6,
 		rate_estimator.get_rate(),
 		extra_packet_rate,
@@ -171,7 +175,7 @@ int main( void )
 		hist.num_outstanding(),
 		rate_estimator.get_rate() * PACKET_SIZE * 8.0 / 1.0e6,
 		loss_rate * 100,
-		contents->recv_timestamp / 100000 - 13432064006680 );
+		contents->recv_timestamp / 1000 - first_microtick );
       }
     }
   }

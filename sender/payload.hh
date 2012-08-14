@@ -11,6 +11,7 @@ public:
   int process_id;
 
   const std::string str( const size_t len ) const;
+  bool operator==( const Payload & other ) const;
 };
 
 #endif
