@@ -1,5 +1,5 @@
-source = send1way.cc socket.cc buffer-setpoint.cc hist.cc controlled-delay.cc rate-estimate.cc payload.cc history.cc
-objects = socket.o hist.o rate-estimate.o payload.o history.o
+source = send1way.cc socket.cc buffer-setpoint.cc hist.cc controlled-delay.cc rate-estimate.cc payload.cc history.cc delay-servo.cc
+objects = socket.o hist.o rate-estimate.o payload.o history.o delay-servo.o
 executables = send1way buffer-setpoint controlled-delay
 
 CXX = g++

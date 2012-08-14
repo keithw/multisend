@@ -14,5 +14,5 @@ bool Payload::operator==( const Payload & other ) const
   return (sequence_number == other.sequence_number
 	  && sent_timestamp == other.sent_timestamp
 	  && recv_timestamp == other.recv_timestamp
-	  && process_id == other.process_id);
+	  && sender_id == other.sender_id);
 }
