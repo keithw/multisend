@@ -1,5 +1,5 @@
-source = infer.cc poissonpmf.cc
-objects = poissonpmf.o
+source = infer.cc process.cc
+objects = process.o
 executables = infer
 
 CXX = g++
