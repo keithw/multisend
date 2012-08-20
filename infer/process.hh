@@ -17,11 +17,10 @@ private:
     double _stddev;
     std::vector< double > _cdf;
 
-    const double & cached_cdf( int val );
-
   public:
     GaussianCache( int max_rate );
-    const double & operator()( double stddev, int val );
+    void calculate( double stddev );
+    const double & operator()( int val ) { return _cdf[ _offset + val ]; }
   };
   
   GaussianCache _gaussian_cdf;

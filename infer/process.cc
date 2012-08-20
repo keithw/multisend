@@ -46,6 +46,8 @@ void Process::evolve( const double time )
 {
   double stddev = _brownian_motion_rate * sqrt( time );
 
+  _gaussian_cdf.calculate( stddev );
+
   const int max_rate = _probability_mass_function.size() - 1;
 
   std::vector< double > new_pmf( _probability_mass_function.size() );
@@ -54,14 +56,14 @@ void Process::evolve( const double time )
     double prob = _probability_mass_function[ rate ];
 
     /* calculate chance of zero */
-    new_pmf[ 0 ] += prob * (_gaussian_cdf( stddev, 0 + 1 - rate ) - 0);
+    new_pmf[ 0 ] += prob * (_gaussian_cdf( 0 + 1 - rate ) - 0);
 
     /* calculate chance of max */
-    new_pmf[ max_rate ] += prob * (1 - _gaussian_cdf( stddev, max_rate - rate ));
+    new_pmf[ max_rate ] += prob * (1 - _gaussian_cdf( max_rate - rate ));
 
     /* calculate rest of the intervals */
     for ( int newrate = 1; newrate < max_rate; newrate++ ) {
-      new_pmf[ newrate ] += prob * (_gaussian_cdf( stddev, newrate + 1 - rate ) - _gaussian_cdf( stddev, newrate - rate ));
+      new_pmf[ newrate ] += prob * (_gaussian_cdf( newrate + 1 - rate ) - _gaussian_cdf( newrate - rate ));
     }
   }
 
@@ -70,32 +72,23 @@ void Process::evolve( const double time )
 
 Process::GaussianCache::GaussianCache( int max_rate )
   : _offset( max_rate ),
-    _stddev( 0 ),
+    _stddev( -1 ),
     _cdf( max_rate + 1 + max_rate )
 {
 }
 
-const double & Process::GaussianCache::cached_cdf( int val )
-{
-  assert( _offset + val >= 0 );
-  assert( _offset + val < (int)_cdf.size() );
-  return _cdf[ _offset + val ];
-}
-
-const double & Process::GaussianCache::operator()( double stddev, int val )
+void Process::GaussianCache::calculate( double stddev )
 {
   if ( stddev == _stddev ) {
-    /* retrieve cached value */
-    return cached_cdf( val );
-  } else {
-    /* otherwise... */
-    _stddev = stddev;
-    normal diffdist( 0, stddev );
-    for ( unsigned int diff = 0; diff < _cdf.size(); diff++ ) {
-      int the_val = diff - _offset;
-      _cdf[ diff ] = cdf( diffdist, the_val );
-    }
+    /* nothing to do */
+    return;
+  }
 
-    return cached_cdf( val );
+  /* otherwise... */
+  _stddev = stddev;
+  normal diffdist( 0, stddev );
+  for ( unsigned int diff = 0; diff < _cdf.size(); diff++ ) {
+    int the_val = diff - _offset;
+    _cdf[ diff ] = cdf( diffdist, the_val );
   }
 }
