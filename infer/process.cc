@@ -16,8 +16,8 @@ Process::SampledFunction::SampledFunction( const int num_samples,
 {
 }
 
-Process::Process( const int maximum_rate, const double s_brownian_motion_rate )
-  : _probability_mass_function( 100, maximum_rate, 0 ),
+Process::Process( const int maximum_rate, const double s_brownian_motion_rate, const int bins )
+  : _probability_mass_function( bins, maximum_rate, 0 ),
     _brownian_motion_rate( s_brownian_motion_rate )
 {
   normalize();

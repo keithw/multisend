@@ -42,7 +42,7 @@ private:
   const double _brownian_motion_rate; /* stddev of difference after one second */
 
 public:
-  Process( const int maximum_rate, const double s_brownian_motion_rate );
+  Process( const int maximum_rate, const double s_brownian_motion_rate, const int bins );
 
   /* apply brownian motion */
   void evolve( const double time );
