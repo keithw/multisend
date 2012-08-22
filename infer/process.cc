@@ -97,7 +97,8 @@ void Process::SampledFunction::for_range( const double min,
 					  const double max,
 					  const std::function< void( const double midpoint, double & value ) > f )
 {
-  for ( unsigned int i = to_bin( sample_floor( min ) ); i <= to_bin( sample_ceil( max ) ); i++ ) {
+  const unsigned int limit_high = to_bin( sample_ceil( max ) );
+  for ( unsigned int i = to_bin( sample_floor( min ) ); i <= limit_high; i++ ) {
     f( from_bin_mid( i ), _function[ i ] );
   }
 }
