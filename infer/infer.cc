@@ -3,11 +3,12 @@
 #include <vector>
 #include <stdio.h>
 
-void print( const std::vector< double > & in )
+void print( const Process::SampledFunction & in )
 {
-  for ( unsigned int i = 0; i < in.size(); i++ ) {
-    printf( "%d %f\n", i, in[ i ] );
-  }
+  in.for_each( [] ( const double midpoint, const double & value ) {
+      printf( "%f %f\n", midpoint, value );
+    } );
+
   printf( "\n\n" );
 }
 
@@ -18,9 +19,16 @@ int main( void )
   int amt = 40;
   myprocess.normalize();
   print( myprocess.pmf() );
+  myprocess.evolve( 0.1 );
+  myprocess.normalize();
+  print( myprocess.pmf() );
+
+  myprocess.observe( 0.1, amt );
+  myprocess.normalize();
+  print( myprocess.pmf() );
 
   while ( 1 ) {
-    myprocess.observe( 0.1, amt );
+    //    myprocess.observe( 0.1, amt );
     myprocess.evolve( 0.1 );
     myprocess.normalize();
     print( myprocess.pmf() );
