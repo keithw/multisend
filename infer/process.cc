@@ -12,12 +12,13 @@ Process::SampledFunction::SampledFunction( const int num_samples,
 					   const double minimum_value )
   : _offset( minimum_value ),
     _bin_width( (maximum_value - minimum_value) / num_samples ),
-    _function( to_bin( maximum_value ) + 1, 1.0 )
+    _function( int((maximum_value - minimum_value) / _bin_width) + 1, 1.0 )
 {
 }
 
-Process::Process( const int maximum_rate, const double s_brownian_motion_rate, const int bins )
+Process::Process( const double maximum_rate, const double s_brownian_motion_rate, const int bins )
   : _probability_mass_function( bins, maximum_rate, 0 ),
+    _gaussian( maximum_rate, bins * 2 ),
     _brownian_motion_rate( s_brownian_motion_rate )
 {
   normalize();
@@ -57,7 +58,7 @@ void Process::evolve( const double time )
 {
   /* initialize brownian motion */
   double stddev = _brownian_motion_rate * sqrt( time );
-  normal diffdist( 0, stddev );
+  _gaussian.calculate( stddev );
 
   /* initialize new pmf */
   SampledFunction new_pmf( _probability_mass_function );
@@ -71,8 +72,8 @@ void Process::evolve( const double time )
 							    [&]
 							    ( const double new_rate, double & new_prob )
 							    {
-							      new_prob += old_prob * ( cdf( diffdist, new_pmf.sample_ceil( new_rate ) - old_rate )
-										       - cdf( diffdist, new_pmf.sample_floor( new_rate ) - old_rate ) );
+							      new_prob += old_prob * ( _gaussian.cdf( new_pmf.sample_ceil( new_rate ) - old_rate )
+										       - _gaussian.cdf( new_pmf.sample_floor( new_rate ) - old_rate ) );
 							    } );
 				       } );
   
@@ -110,4 +111,21 @@ const Process::SampledFunction & Process::SampledFunction::operator=( const Samp
   _function = other._function;
 
   return *this;
+}
+
+Process::GaussianCache::GaussianCache( const double maximum_rate, const int bins )
+  : _cdf( bins, maximum_rate, -maximum_rate ),
+    _stddev( -1 )
+{}
+
+void Process::GaussianCache::calculate( const double s_stddev )
+{
+  if ( s_stddev == _stddev ) {
+    return;
+  }
+
+  _stddev = s_stddev;
+  normal diffdist( 0, _stddev );
+
+  _cdf.for_each( [&] ( const double x, double & value ) { value = boost::math::cdf( diffdist, x ); } );
 }

@@ -24,6 +24,7 @@ public:
     SampledFunction( const int num_samples, const double maximum_value, const double minimum_value );
 
     double & operator[]( const double x ) { return _function[ to_bin( x ) ]; }
+    const double & operator[]( const double x ) const { return _function[ to_bin( x ) ]; }
 
     double sample_floor( double x ) const { return from_bin_floor( to_bin( x ) ); }
     double sample_ceil( double x ) const { return from_bin_ceil( to_bin( x ) ); }
@@ -37,12 +38,24 @@ public:
   };
 
 private:
+  class GaussianCache {
+  private:
+    SampledFunction _cdf;
+    double _stddev;
+
+  public:
+    GaussianCache( const double maximum_rate, const int bins );
+    void calculate( const double s_stddev );
+    double cdf( const double x ) const { return _cdf[ x ]; }
+  };
+
   SampledFunction _probability_mass_function;
+  GaussianCache _gaussian;
 
   const double _brownian_motion_rate; /* stddev of difference after one second */
 
 public:
-  Process( const int maximum_rate, const double s_brownian_motion_rate, const int bins );
+  Process( const double maximum_rate, const double s_brownian_motion_rate, const int bins );
 
   /* apply brownian motion */
   void evolve( const double time );
