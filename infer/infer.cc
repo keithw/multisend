@@ -14,12 +14,16 @@ void print( const Process::SampledFunction & in )
 
 int main( void )
 {
-  Process myprocess( 2000, 1000, 100 );
+  Process myprocess( 2000, 100, 100 );
 
-  for ( int amt = 0; amt < 1000; amt++ ) {
-    myprocess.observe( 0.01, amt );
-    myprocess.evolve( 0.01 );
+  for ( int i = 0; i < 2000; i++ ) {
+    int amt = 10;
+    if ( i > 1000 ) {
+      amt = 0;
+    }
+    myprocess.observe( .01, amt );
+    myprocess.evolve( .01 );
     myprocess.normalize();
-    amt++;
+    printf( "%d %f %f\n", i, myprocess.lower_quantile( .05 ), myprocess.lower_quantile( .5 ) );
   }
 }

@@ -129,3 +129,17 @@ void Process::GaussianCache::calculate( const double s_stddev )
 
   _cdf.for_each( [&] ( const double x, double & value ) { value = boost::math::cdf( diffdist, x ); } );
 }
+
+double Process::SampledFunction::lower_quantile( const double x ) const
+{
+  double sum = 0.0;
+
+  for ( unsigned int i = 0; i < _function.size(); i++ ) {
+    sum += _function[ i ];
+    //    fprintf( stderr, "%d sum=%f\n", i, sum );
+    if ( sum >= x ) {
+      if ( i == 0 ) { return 0; } else { return from_bin_floor( i ); }
+    }
+  }
+  return from_bin_floor( _function.size() - 1 );
+}

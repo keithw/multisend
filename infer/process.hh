@@ -35,6 +35,8 @@ public:
 		    const std::function< void( const double midpoint, double & value ) > f );
 
     const SampledFunction & operator=( const SampledFunction & other );
+
+    double lower_quantile( const double x ) const;
   };
 
 private:
@@ -67,6 +69,8 @@ public:
   void normalize( void );
 
   const SampledFunction & pmf( void ) { return _probability_mass_function; }
+
+  double lower_quantile( const double x ) const { return _probability_mass_function.lower_quantile( x ); }
 };
 
 #endif
