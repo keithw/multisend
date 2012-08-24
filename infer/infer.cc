@@ -2,28 +2,45 @@
 
 #include <vector>
 #include <stdio.h>
+#include <iostream>
+#include <assert.h>
 
-void print( const Process::SampledFunction & in )
-{
-  in.for_each( [] ( const double midpoint, const double & value ) {
-      printf( "%f %f\n", midpoint, value );
-    } );
-
-  printf( "\n\n" );
-}
+using namespace std;
 
 int main( void )
 {
-  Process myprocess( 2000, 100, 100 );
+  Process myprocess( 2000, 500, 100 );
+  Process myprocess_slow( 2000, 50, 100 );
 
-  for ( int i = 0; i < 2000; i++ ) {
-    int amt = 10;
-    if ( i > 1000 ) {
-      amt = 0;
+  const int interval_ms = 10;
+
+  int current_chunk = -1, count = -1;
+
+  while ( cin.good() ) {
+    int ms = 0;
+    cin >> ms;
+
+    if ( current_chunk == -1 ) { /* need to initialize */
+      current_chunk = ms / interval_ms;
+      count = 0;
     }
-    myprocess.observe( .01, amt );
-    myprocess.evolve( .01 );
-    myprocess.normalize();
-    printf( "%d %f %f\n", i, myprocess.lower_quantile( .05 ), myprocess.lower_quantile( .5 ) );
+
+    assert( ms / interval_ms >= current_chunk );
+
+    while ( current_chunk < ms / interval_ms ) {
+      myprocess.evolve( (double)interval_ms / 1000.0 );
+      myprocess.observe( (double)interval_ms / 1000.0, count );
+      myprocess.normalize();
+      myprocess_slow.evolve( (double)interval_ms / 1000.0 );
+      myprocess_slow.observe( (double)interval_ms / 1000.0, count );
+      myprocess_slow.normalize();
+      current_chunk++;
+      count = 0;
+      printf( "%d %f %f\n", current_chunk * interval_ms,
+	      myprocess.lower_quantile( .05 ),
+	      myprocess_slow.lower_quantile( .05 ) );
+    }
+
+    count++;
   }
 }
