@@ -22,6 +22,8 @@ private:
 
   const double _brownian_motion_rate; /* stddev of difference after one second */
 
+  bool _normalized;
+
 public:
   Process( const double maximum_rate, const double s_brownian_motion_rate, const int bins );
 
@@ -34,7 +36,17 @@ public:
   /* make pmf sum to unity */
   void normalize( void );
 
+  const SampledFunction & pmf( void ) const { return _probability_mass_function; }
+
   double lower_quantile( const double x ) const { return _probability_mass_function.lower_quantile( x ); }
+
+  /* set rate to known quantity */
+  void set_certain( const double rate );
+
+  Process & operator=( const Process & other );
+
+  /* count probabilities assuming no evolution */
+  double count_probability( const double time, const int counts );
 };
 
 #endif

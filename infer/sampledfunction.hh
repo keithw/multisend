@@ -20,16 +20,23 @@ private:
 public:
   SampledFunction( const int num_samples, const double maximum_value, const double minimum_value );
 
+  unsigned int index( const double x ) const { return to_bin( x ); }
   double & operator[]( const double x ) { return _function[ to_bin( x ) ]; }
   const double & operator[]( const double x ) const { return _function[ to_bin( x ) ]; }
 
   double sample_floor( double x ) const { return from_bin_floor( to_bin( x ) ); }
   double sample_ceil( double x ) const { return from_bin_ceil( to_bin( x ) ); }
 
-  void for_each( const std::function< void( const double midpoint, double & value ) > f );
-  void for_each( const std::function< void( const double midpoint, const double & value ) > f ) const;
+  void for_each( const std::function< void( const double midpoint,
+					    double & value,
+					    const unsigned int index ) > f );
+  void for_each( const std::function< void( const double midpoint,
+					    const double & value,
+					    const unsigned int index ) > f ) const;
   void for_range( const double min, const double max,
-		  const std::function< void( const double midpoint, double & value ) > f );
+		  const std::function< void( const double midpoint,
+					     double & value,
+					     const unsigned int index ) > f );
 
   const SampledFunction & operator=( const SampledFunction & other );
 

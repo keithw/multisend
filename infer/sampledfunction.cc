@@ -11,27 +11,33 @@ SampledFunction::SampledFunction( const int num_samples,
 {
 }
 
-void SampledFunction::for_each( const std::function< void( const double midpoint, double & value ) > f )
+void SampledFunction::for_each( const std::function< void( const double midpoint,
+							 double & value,
+							 const unsigned int index ) > f )
 {
   for ( unsigned int i = 0; i < _function.size(); i++ ) {
-    f( from_bin_mid( i ), _function[ i ] );
+    f( from_bin_mid( i ), _function[ i ], i );
   }
 }
 
-void SampledFunction::for_each( const std::function< void( const double midpoint, const double & value ) > f ) const
+void SampledFunction::for_each( const std::function< void( const double midpoint,
+							   const double & value,
+							   const unsigned int index ) > f ) const
 {
   for ( unsigned int i = 0; i < _function.size(); i++ ) {
-    f( from_bin_mid( i ), _function[ i ] );
+    f( from_bin_mid( i ), _function[ i ], i );
   }
 }
 
 void SampledFunction::for_range( const double min,
 					  const double max,
-					  const std::function< void( const double midpoint, double & value ) > f )
+					  const std::function< void( const double midpoint,
+								     double & value,
+								     const unsigned int index ) > f )
 {
   const unsigned int limit_high = to_bin( sample_ceil( max ) );
   for ( unsigned int i = to_bin( sample_floor( min ) ); i <= limit_high; i++ ) {
-    f( from_bin_mid( i ), _function[ i ] );
+    f( from_bin_mid( i ), _function[ i ], i );
   }
 }
 

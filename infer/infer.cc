@@ -1,15 +1,18 @@
-#include "process.hh"
-
 #include <vector>
 #include <stdio.h>
 #include <iostream>
 #include <assert.h>
+
+#include "process.hh"
+#include "processforecaster.hh"
 
 using namespace std;
 
 int main( void )
 {
   Process myprocess( 2000, 500, 100 );
+
+  ProcessForecastCache( .01, myprocess, 100 );
 
   const int interval_ms = 10;
 
