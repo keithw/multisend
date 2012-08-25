@@ -1,5 +1,5 @@
-source = infer.cc process.cc
-objects = process.o
+source = infer.cc process.cc sampledfunction.cc
+objects = process.o sampledfunction.o
 executables = infer
 
 CXX = g++

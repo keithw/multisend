@@ -10,7 +10,6 @@ using namespace std;
 int main( void )
 {
   Process myprocess( 2000, 500, 100 );
-  Process myprocess_slow( 2000, 50, 100 );
 
   const int interval_ms = 10;
 
@@ -31,14 +30,10 @@ int main( void )
       myprocess.evolve( (double)interval_ms / 1000.0 );
       myprocess.observe( (double)interval_ms / 1000.0, count );
       myprocess.normalize();
-      myprocess_slow.evolve( (double)interval_ms / 1000.0 );
-      myprocess_slow.observe( (double)interval_ms / 1000.0, count );
-      myprocess_slow.normalize();
       current_chunk++;
       count = 0;
-      printf( "%d %f %f\n", current_chunk * interval_ms,
-	      myprocess.lower_quantile( .05 ),
-	      myprocess_slow.lower_quantile( .05 ) );
+      printf( "%d %f\n", current_chunk * interval_ms,
+	      myprocess.lower_quantile( .05 ) );
     }
 
     count++;
