@@ -12,11 +12,15 @@ int main( void )
 {
   Process myprocess( 2000, 500, 100 );
 
-  ProcessForecastCache( .01, myprocess, 100 );
+  myprocess.normalize();
+
+  ProcessForecastInterval forecastr( .01, myprocess, 30, 10 );
 
   const int interval_ms = 10;
 
   int current_chunk = -1, count = -1;
+
+  fprintf( stderr, "Ready...\n" );
 
   while ( cin.good() ) {
     int ms = 0;
@@ -33,10 +37,13 @@ int main( void )
       myprocess.evolve( (double)interval_ms / 1000.0 );
       myprocess.observe( (double)interval_ms / 1000.0, count );
       myprocess.normalize();
+
+      unsigned int fiveprediction = forecastr.lower_quantile( myprocess, .05 );
+
       current_chunk++;
       count = 0;
-      printf( "%d %f\n", current_chunk * interval_ms,
-	      myprocess.lower_quantile( .05 ) );
+      printf( "%d %f %d\n", current_chunk * interval_ms,
+	      myprocess.lower_quantile( .05 ), fiveprediction );
     }
 
     count++;

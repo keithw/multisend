@@ -20,6 +20,7 @@ private:
 public:
   SampledFunction( const int num_samples, const double maximum_value, const double minimum_value );
 
+  unsigned int size( void ) const { return _function.size(); }
   unsigned int index( const double x ) const { return to_bin( x ); }
   double & operator[]( const double x ) { return _function[ to_bin( x ) ]; }
   const double & operator[]( const double x ) const { return _function[ to_bin( x ) ]; }

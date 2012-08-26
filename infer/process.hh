@@ -47,6 +47,8 @@ public:
 
   /* count probabilities assuming no evolution */
   double count_probability( const double time, const int counts );
+
+  bool is_normalized( void ) const { return _normalized; }
 };
 
 #endif
