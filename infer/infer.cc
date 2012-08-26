@@ -14,11 +14,16 @@ int main( void )
 
   myprocess.normalize();
 
-  ProcessForecastInterval forecastr( .01, myprocess, 30, 10 );
-
+  const int predict_ticks = 10;
   const int interval_ms = 10;
 
+  ProcessForecastInterval forecastr( (double)interval_ms / 1000.0, myprocess, 30, predict_ticks );
+
   int current_chunk = -1, count = -1;
+
+  int predicted_counts = 0;
+  int predict_end = 0;
+  int actual_counts = 0;
 
   fprintf( stderr, "Ready...\n" );
 
@@ -38,14 +43,21 @@ int main( void )
       myprocess.observe( (double)interval_ms / 1000.0, count );
       myprocess.normalize();
 
-      unsigned int fiveprediction = forecastr.lower_quantile( myprocess, .05 );
+      if ( current_chunk == predict_end ) {
+	printf( "%d actual = %d predicted = %d\n", current_chunk * interval_ms,
+		actual_counts,
+		predicted_counts );
+
+	predict_end = current_chunk + predict_ticks;
+	actual_counts = 0;
+	predicted_counts = forecastr.lower_quantile( myprocess, 0.05 );
+      }
 
       current_chunk++;
       count = 0;
-      printf( "%d %f %d\n", current_chunk * interval_ms,
-	      myprocess.lower_quantile( .05 ), fiveprediction );
     }
 
     count++;
+    actual_counts++;
   }
 }
