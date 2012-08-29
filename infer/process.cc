@@ -69,17 +69,19 @@ void Process::evolve( const double time )
   const double zero_escape_probability = 1 - poissonpdf( time * _outage_escape_rate, 0 );
 
   _probability_mass_function.for_each( [&]
-				       ( const double old_rate, const double & old_prob, const unsigned int index )
+				       ( const double old_rate, const double & old_prob, const unsigned int old_index )
 				       {
 					 new_pmf.for_range( old_rate - 5 * stddev,
 							    old_rate + 5 * stddev,
 							    [&]
-							    ( const double new_rate, double & new_prob, const unsigned int index )
+							    ( const double new_rate, double & new_prob, const unsigned int new_index )
 							    {
 							      double zfactor = 1.0;
-							      if ( old_rate == 0.0 ) {
-								zfactor = ( new_rate != 0.0 ) ? zero_escape_probability : (1 - zero_escape_probability);
+							      
+							      if ( old_index == 0 ) {
+								zfactor = ( new_index != 0 ) ? zero_escape_probability : (1 - zero_escape_probability);
 							      }
+							      
 							      new_prob += zfactor * old_prob
 								* ( _gaussian.cdf( new_pmf.sample_ceil( new_rate ) - old_rate )
 								    - _gaussian.cdf( new_pmf.sample_floor( new_rate ) - old_rate ) );

@@ -10,7 +10,7 @@ using namespace std;
 
 int main( void )
 {
-  Process myprocess( 2000, 600, 0.5, 100 );
+  Process myprocess( 2000, 600, 5, 100 );
 
   myprocess.normalize();
 
