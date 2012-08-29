@@ -10,7 +10,7 @@ using namespace std;
 
 int main( void )
 {
-  Process myprocess( 2000, 500, 100 );
+  Process myprocess( 2000, 600, 100 );
 
   myprocess.normalize();
 
@@ -27,6 +27,8 @@ int main( void )
 
   fprintf( stderr, "Ready...\n" );
 
+  int worse_than_predicted = 0, total_predictions = 0;
+
   while ( cin.good() ) {
     int ms = 0;
     cin >> ms;
@@ -36,6 +38,10 @@ int main( void )
       count = 0;
     }
 
+    if ( ms == 0 && current_chunk != 0 ) {
+      break;
+    }
+
     assert( ms / interval_ms >= current_chunk );
 
     while ( current_chunk < ms / interval_ms ) {
@@ -43,10 +49,12 @@ int main( void )
       myprocess.observe( (double)interval_ms / 1000.0, count );
       myprocess.normalize();
 
-      if ( current_chunk == predict_end ) {
-	printf( "%d actual = %d predicted = %d\n", current_chunk * interval_ms,
-		actual_counts,
-		predicted_counts );
+      if ( current_chunk >= predict_end ) {
+	total_predictions++;
+
+	if ( actual_counts < predicted_counts ) {
+	  worse_than_predicted++;
+	}
 
 	predict_end = current_chunk + predict_ticks;
 	actual_counts = 0;
@@ -60,4 +68,9 @@ int main( void )
     count++;
     actual_counts++;
   }
+
+  printf( "Results: %d/%d (= %f %%) were worse than predicted.\n",
+	  worse_than_predicted,
+	  total_predictions,
+	  100.0 * (double) worse_than_predicted / (double) total_predictions );
 }
