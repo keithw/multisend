@@ -1,16 +1,17 @@
 #include <assert.h>
 #include <algorithm>
-#include <boost/math/distributions/poisson.hpp>
 #include <boost/math/distributions/normal.hpp>
 
 #include "process.hh"
+#include "mypoisson.hh"
 
 using namespace boost::math;
 
-Process::Process( const double maximum_rate, const double s_brownian_motion_rate, const int bins )
+Process::Process( const double maximum_rate, const double s_brownian_motion_rate, const double s_outage_escape_rate, const int bins )
   : _probability_mass_function( bins, maximum_rate, 0 ),
     _gaussian( maximum_rate, bins * 2 ),
     _brownian_motion_rate( s_brownian_motion_rate ),
+    _outage_escape_rate( s_outage_escape_rate ),
     _normalized( false )
 {
   normalize();
@@ -24,8 +25,7 @@ void Process::observe( const double time, const int counts )
   _probability_mass_function.for_each( [&]
 				       ( const double midpoint, double & value, const unsigned int index )
 				       {
-					 value *= pdf( poisson( midpoint * time ),
-						       counts );
+					 value *= poissonpdf( midpoint * time, counts );
 				       } );
 }
 
@@ -66,6 +66,8 @@ void Process::evolve( const double time )
   SampledFunction new_pmf( _probability_mass_function );
   new_pmf.for_each( [] ( const double, double & value, const unsigned int index ) { value = 0; } );
 
+  const double zero_escape_probability = 1 - poissonpdf( time * _outage_escape_rate, 0 );
+
   _probability_mass_function.for_each( [&]
 				       ( const double old_rate, const double & old_prob, const unsigned int index )
 				       {
@@ -74,8 +76,13 @@ void Process::evolve( const double time )
 							    [&]
 							    ( const double new_rate, double & new_prob, const unsigned int index )
 							    {
-							      new_prob += old_prob * ( _gaussian.cdf( new_pmf.sample_ceil( new_rate ) - old_rate )
-										       - _gaussian.cdf( new_pmf.sample_floor( new_rate ) - old_rate ) );
+							      double zfactor = 1.0;
+							      if ( old_rate == 0.0 ) {
+								zfactor = ( new_rate != 0.0 ) ? zero_escape_probability : (1 - zero_escape_probability);
+							      }
+							      new_prob += zfactor * old_prob
+								* ( _gaussian.cdf( new_pmf.sample_ceil( new_rate ) - old_rate )
+								    - _gaussian.cdf( new_pmf.sample_floor( new_rate ) - old_rate ) );
 							    } );
 				       } );
   
@@ -139,8 +146,7 @@ double Process::count_probability( const double time, const int counts )
 					     const double & rate_probability,
 					     const unsigned int index )
 				       {
-					 ret += rate_probability * pdf( poisson( rate * time ),
-									counts );
+					 ret += rate_probability * poissonpdf( rate * time, counts );
 				       } );
 
   return ret;
