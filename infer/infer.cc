@@ -10,7 +10,7 @@ using namespace std;
 
 int main( void )
 {
-  Process myprocess( 2000, 600, 1, 100 );
+  Process myprocess( 2000, 300, 5, 64 );
 
   myprocess.normalize();
 
@@ -56,9 +56,12 @@ int main( void )
 	  worse_than_predicted++;
 	}
 
+	printf( "%d actual = %d predicted = %d diff = %d\n",
+		ms, actual_counts, predicted_counts, actual_counts - predicted_counts );
+
 	predict_end = current_chunk + predict_ticks;
 	actual_counts = 0;
-	predicted_counts = forecastr.lower_quantile( myprocess, 0.05 );
+	predicted_counts = forecastr.lower_quantile( myprocess, 0.15 );
       }
 
       current_chunk++;
@@ -69,8 +72,8 @@ int main( void )
     actual_counts++;
   }
 
-  printf( "Results: %d/%d (= %f %%) were worse than predicted.\n",
-	  worse_than_predicted,
-	  total_predictions,
-	  100.0 * (double) worse_than_predicted / (double) total_predictions );
+  fprintf( stderr, "Results: %d/%d (= %f %%) were worse than predicted.\n",
+	   worse_than_predicted,
+	   total_predictions,
+	   100.0 * (double) worse_than_predicted / (double) total_predictions );
 }
