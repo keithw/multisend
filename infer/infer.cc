@@ -52,7 +52,7 @@ int main( void )
       if ( current_chunk >= predict_end ) {
 	total_predictions++;
 
-	if ( actual_counts < predicted_counts ) {
+	if ( actual_counts < predicted_counts - 1 ) {
 	  worse_than_predicted++;
 	}
 
