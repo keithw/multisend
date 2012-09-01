@@ -14,19 +14,42 @@ int main( void )
   //  const double FRAME_INTERVAL = 0.1;
   //  double last_frame = -1;
 
-  while ( cin.good() ) {
+  double time;
+  const double TICK_LENGTH = 0.02;
+
+  while ( 1 ) {
+    if ( !cin.good() ) {
+      exit( 0 );
+    }
+
     int ms = -1;
     cin >> ms;
 
-    double time = ms / 1000.0;
+    double packet_time = (double) ms / 1000.0;
 
     if ( !receiver ) {
-      receiver = new Receiver( time );
-      //      last_frame = time;
+      receiver = new Receiver( packet_time );
+      time = packet_time;
     }
 
-    receiver->advance_to( time );
-    receiver->recv();
-    receiver->forecast();
+    if ( packet_time < time ) {
+      receiver->recv();
+    } else {
+      /* need to advance time */
+      while ( packet_time >= time ) {
+	time += TICK_LENGTH;
+	receiver->advance_to( time );
+	DeliveryForecast forecast( receiver->forecast() );
+	printf( "%.2f", time );
+	for ( auto it = forecast.counts.begin();
+	      it != forecast.counts.end();
+	      it++ ) {
+	  printf( " %d", *it );
+	}
+	printf( "\n" );
+      }
+      
+      receiver->recv();
+    }
   }
 }
