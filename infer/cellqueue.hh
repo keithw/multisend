@@ -6,15 +6,16 @@
 class CellQueue
 {
 private:
-  std::queue< int > _packets;
+  std::queue< double > _packets;
 
   int _opportunities, _deliveries;
 
 public:
   CellQueue() : _packets(), _opportunities( 0 ), _deliveries( 0 ) {}
 
-  void send( const int time );
-  void recv( const int time );
+  void send( const double time );
+  bool recv( const double time );
+  unsigned int size( void ) const { return _packets.size(); }
 };
 
 #endif

@@ -2,22 +2,24 @@
 
 #include "cellqueue.hh"
 
-void CellQueue::send( const int time )
+void CellQueue::send( const double time )
 {
   _packets.push( time );
 }
 
-void CellQueue::recv( const int time )
+bool CellQueue::recv( const double time )
 {
   _opportunities++;
 
   if ( _packets.empty() ) {
-    fprintf( stderr, "Underflow at time %d\n", time );
+    fprintf( stderr, "Underflow at time %f\n", time );
+    return false;
   } else {
-    const int send_time = _packets.front();
+    const double send_time = _packets.front();
     _packets.pop();
     _deliveries++;
-    fprintf( stderr, "Packet delivered after delay of %d\n",
-	     time - send_time );
+    fprintf( stderr, "%f : packet delivered after delay of %f\n",
+	     time, time - send_time );
+    return true;
   }
 }
