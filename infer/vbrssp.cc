@@ -15,9 +15,6 @@ int main( void )
   std::queue< DeliveryForecast > forecasts;
   std::queue< unsigned int > received_packet_feedback;
 
-  //  const double FRAME_INTERVAL = 0.1;
-  //  double last_frame = -1;
-
   double time;
   const double TICK_LENGTH = 0.02;
   const unsigned int FEEDBACK_DELAY_TICKS = 2;
@@ -46,8 +43,8 @@ int main( void )
     }
 
     if ( packet_time < time ) {
-      receiver->recv();
       if ( queue.recv( time ) ) {
+	receiver->recv();
 	packets_received++;
       }
     } else {
@@ -90,8 +87,8 @@ int main( void )
 	}
       }
       
-      receiver->recv();
       if ( queue.recv( time ) ) {
+	receiver->recv();
 	packets_received++;
       }
     }
