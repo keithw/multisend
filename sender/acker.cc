@@ -23,9 +23,6 @@ void Acker::recv( void )
   SatPayload *contents = (SatPayload *) incoming.payload.data();
   contents->recv_timestamp = incoming.timestamp;
 
-  int64_t oneway_ns = contents->recv_timestamp - contents->sent_timestamp;
-  double oneway = oneway_ns / 1.e9;
-  printf( "%d 1delay: %.4f\n", contents->sequence_number, oneway );
 
   if ( _server ) {
     if ( _saturatr ) {
@@ -50,8 +47,8 @@ void Acker::recv( void )
   outgoing.ack_number = contents->sequence_number;
   _send.send( Socket::Packet( _remote, outgoing.str( sizeof( SatPayload ) ) ) );
 
-  /*  printf( "%s pid=%d DATA RECEIVED / ACK SENT senderid=%d seq=%d, send_time=%ld, recv_time=%ld\n",
-      _name.c_str(), getpid(), contents->sender_id, contents->sequence_number, contents->sent_timestamp, contents->recv_timestamp ); */
+  printf( "%s pid=%d DATA RECEIVED / ACK SENT senderid=%d seq=%d, send_time=%ld, recv_time=%ld\n",
+      _name.c_str(), getpid(), contents->sender_id, contents->sequence_number, contents->sent_timestamp, contents->recv_timestamp ); 
 }
 
 void Acker::tick( void )
