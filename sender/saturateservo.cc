@@ -63,8 +63,7 @@ void SaturateServo::recv( void )
     int64_t rtt_ns = contents->recv_timestamp - contents->sent_timestamp;
     double rtt = rtt_ns / 1.e9;
 
-    printf( "%d rtt: %.4f %d => ", contents->ack_number, (double) rtt, _window );
-
+    printf( "%s senderid %d seq %d rtt: %.4f %d => ", _name.c_str(),_server ? _foreign_id : contents->sender_id , contents->ack_number, (double) rtt, _window );
     /* increase-decrease rules */
 
     if ( (rtt < LOWER_RTT) && (_window < UPPER_WINDOW) ) {
