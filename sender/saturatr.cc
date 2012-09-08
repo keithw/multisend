@@ -54,11 +54,14 @@ int main( int argc, char *argv[] )
   SaturateServo saturatr( "OUTGOING", feedback_socket, data_socket, remote_data_address, server, sender_id );
   Acker acker( "INCOMING", data_socket, feedback_socket, remote_feedback_address, server, sender_id );
 
+  saturatr.set_acker( &acker );
+  acker.set_saturatr( &saturatr );
+
   while ( 1 ) {
     fflush( NULL );
 
     /* possibly send packet */
-    //    saturatr.tick();
+    saturatr.tick();
     acker.tick();
     
     /* wait for incoming packet OR expiry of timer */
@@ -69,7 +72,12 @@ int main( int argc, char *argv[] )
     poll_fds[ 1 ].events = POLLIN;
 
     struct timespec timeout;
-    uint64_t next_transmission_delay = 0; //std::min( saturatr.wait_time(), acker.wait_time() );
+    uint64_t next_transmission_delay = std::min( saturatr.wait_time(), acker.wait_time() );
+
+    if ( next_transmission_delay < 1000000 ) {
+      next_transmission_delay = 1000000;
+    }
+
     timeout.tv_sec = next_transmission_delay / 1000000000;
     timeout.tv_nsec = next_transmission_delay % 1000000000;
     ppoll( poll_fds, 2, &timeout, NULL );
@@ -79,8 +87,7 @@ int main( int argc, char *argv[] )
     }
 
     if ( poll_fds[ 1 ].revents & POLLIN ) {
-      //saturatr.recv();
-      server++;
+      saturatr.recv();
     }
   }
 }
