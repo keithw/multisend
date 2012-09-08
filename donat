@@ -28,7 +28,7 @@ system( "echo 0 | sudo tee /proc/sys/net/ipv4/conf/default/rp_filter" );
 system( "echo 1 | sudo tee /proc/sys/net/ipv4/conf/default/accept_local" );
 system( "echo 1 | sudo tee /proc/sys/net/ipv4/conf/default/log_martians" );
 
-for my $device ( qw[A] ) {
+for my $device ( qw[A B] ) {
   my ( $num ) = $device =~ tr{ABC}{123}r;
   my $dev = $devs[ $num ];
 

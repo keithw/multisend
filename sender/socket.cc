@@ -21,6 +21,13 @@ Socket::Address::Address( string ip, uint16_t port )
   }
 }
 
+std::string Socket::Address::ip( void ) const
+{
+  char tmp[ 64 ];
+  snprintf( tmp, 64, "%s", inet_ntoa( _sockaddr.sin_addr ) );
+  return string( tmp );
+}
+
 const string Socket::Address::str( void ) const
 {
   char tmp[ 64 ];
@@ -41,6 +48,15 @@ Socket::Socket()
   if ( setsockopt( sock, SOL_SOCKET, SO_TIMESTAMPNS, &ts_opt, sizeof( ts_opt ) )
        < 0 ) {
     perror( "setsockopt" );
+    exit( 1 );
+  }
+}
+
+void Socket::connect( const Socket::Address & addr ) const
+{
+  if ( ::connect( sock, (sockaddr *)&addr.sockaddr(), sizeof( addr.sockaddr() ) ) < 0 ) {
+    fprintf( stderr, "Error connecting to %s\n", addr.str().c_str() );
+    perror( "bind" );
     exit( 1 );
   }
 }
