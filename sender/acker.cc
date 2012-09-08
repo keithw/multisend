@@ -47,8 +47,15 @@ void Acker::recv( void )
   outgoing.ack_number = contents->sequence_number;
   _send.send( Socket::Packet( _remote, outgoing.str( sizeof( SatPayload ) ) ) );
 
-  printf( "%s pid=%d DATA RECEIVED / ACK SENT senderid=%d seq=%d, send_time=%ld, recv_time=%ld\n",
-      _name.c_str(), getpid(), contents->sender_id, contents->sequence_number, contents->sent_timestamp, contents->recv_timestamp ); 
+  if (_server) {
+   printf( "%s DATA RECEIVED / ACK SENT senderid=%d seq=%d, send_time=%ld, recv_time=%ld\n",
+      _name.c_str(), contents->sender_id, contents->sequence_number, contents->sent_timestamp, contents->recv_timestamp ); 
+  }
+
+  else {
+   printf( "%s DATA RECEIVED / ACK SENT senderid=%d seq=%d, send_time=%ld, recv_time=%ld\n",
+      _name.c_str(),  _ack_id, contents->sequence_number, contents->sent_timestamp, contents->recv_timestamp ); 
+  }
 }
 
 void Acker::tick( void )
