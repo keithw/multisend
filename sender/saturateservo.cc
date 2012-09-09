@@ -41,7 +41,7 @@ void SaturateServo::recv( void )
   /* possibly roam */
   if ( _server ) {
     if ( _acker ) {
-      if ( (contents->sender_id > _foreign_id) && (contents->sequence_number == -1) ) {
+      if ( (contents->sender_id > _foreign_id) && (contents->ack_number == -1) ) {
 	_foreign_id = contents->sender_id;
 	_acker->set_remote( incoming.addr );
       }
