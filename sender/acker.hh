@@ -1,6 +1,6 @@
 #ifndef ACKER_HH
 #define ACKER_HH
-
+#include <fstream>
 #include "socket.hh"
 
 class SaturateServo;
@@ -9,6 +9,7 @@ class Acker
 {
 private:
   const std::string _name;
+  FILE* _log_file;
 
   const Socket _listen;
   const Socket _send;
@@ -26,6 +27,7 @@ private:
 
 public:
   Acker( const char * s_name,
+         FILE* log_file,
 	 const Socket & s_listen,
 	 const Socket & s_send,
 	 const Socket::Address & s_remote,

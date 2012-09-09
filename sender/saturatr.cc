@@ -51,8 +51,14 @@ int main( int argc, char *argv[] )
     remote_feedback_address = Socket::Address( server_ip, 9002 );
   }
 
-  SaturateServo saturatr( "OUTGOING", feedback_socket, data_socket, remote_data_address, server, sender_id );
-  Acker acker( "INCOMING", data_socket, feedback_socket, remote_feedback_address, server, sender_id );
+  FILE* log_file;
+  uint64_t ts=Socket::timestamp();
+  char log_file_name[20];
+  sprintf(log_file_name,"%s-%d-%d",server ? "server" : "client",(int)(ts/1e9),sender_id);
+  log_file=fopen(log_file_name,"w");
+
+  SaturateServo saturatr( "OUTGOING", log_file, feedback_socket, data_socket, remote_data_address, server, sender_id );
+  Acker acker( "INCOMING", log_file, data_socket, feedback_socket, remote_feedback_address, server, sender_id );
 
   saturatr.set_acker( &acker );
   acker.set_saturatr( &saturatr );

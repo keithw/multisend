@@ -4,8 +4,9 @@
 #include "payload.hh"
 #include "saturateservo.hh"
 
-Acker::Acker( const char *s_name, const Socket & s_listen, const Socket & s_send, const Socket::Address & s_remote, const bool s_server, const int s_ack_id )
+Acker::Acker( const char *s_name, FILE* log_file_handle, const Socket & s_listen, const Socket & s_send, const Socket::Address & s_remote, const bool s_server, const int s_ack_id )
   : _name( s_name ), 
+    _log_file(log_file_handle),
     _listen( s_listen ),
     _send( s_send ),
     _remote( s_remote ),
@@ -49,7 +50,7 @@ void Acker::recv( void )
   outgoing.ack_number = contents->sequence_number;
   _send.send( Socket::Packet( _remote, outgoing.str( sizeof( SatPayload ) ) ) );
 
-   printf( "%s DATA RECEIVED / ACK SENT senderid=%d seq=%d, send_time=%ld, recv_time=%ld, 1delay=%.4f \n",
+   fprintf( _log_file,"%s DATA RECEIVED senderid=%d, seq=%d, send_time=%ld, recv_time=%ld, 1delay=%.4f \n",
       _name.c_str(),  _server ? contents->sender_id : _ack_id, contents->sequence_number, contents->sent_timestamp, contents->recv_timestamp,oneway ); 
 }
 
