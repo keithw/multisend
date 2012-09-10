@@ -130,7 +130,7 @@ bool MACAddress::is_broadcast( void ) const
 
 bool MACAddress::matches( const MACAddress & other ) const
 {
-  return ( is_broadcast() || other.is_broadcast() || (octets == other.octets) );
+  return ( is_broadcast() || other.is_broadcast() || (0 == memcmp( octets, other.octets, 6 )) );
 }
 
 std::string MACAddress::parse_human( const std::string & with_colons )
@@ -161,4 +161,17 @@ std::string MACAddress::parse_human( const std::string & with_colons )
   }
 
   return ret;
+}
+
+string MACAddress::pp( void ) const
+{
+  char tmp[ 64 ];
+  snprintf( tmp, 64, "%x:%x:%x:%x:%x:%x",
+	    octets[ 0 ],
+	    octets[ 1 ],
+	    octets[ 2 ],
+	    octets[ 3 ],
+	    octets[ 4 ],
+	    octets[ 5 ] );
+  return string( tmp );
 }

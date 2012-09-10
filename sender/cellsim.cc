@@ -169,7 +169,7 @@ void DelayQueue::tick( void )
 	fprintf( stderr, "%s %f delivery %d\n", _name.c_str(), now / 1000.0, int(now - _limbo.front().packet.entry_time) );
 
 	_delivered.push_back( _limbo.front().packet.contents );
-	bytes_to_play_with -= _limbo.front().packet.contents.size();
+	bytes_to_play_with -= (_limbo.front().packet.contents.size() - _limbo.front().bytes_earned);
 	assert( bytes_to_play_with >= 0 );
 	_limbo.pop();
 	assert( _limbo.empty() );

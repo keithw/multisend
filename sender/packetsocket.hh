@@ -16,6 +16,7 @@ public:
   bool matches( const MACAddress & other ) const;
 
   static std::string parse_human( const std::string & with_colons );
+  std::string pp( void ) const;
 };
 
 class PacketSocket
