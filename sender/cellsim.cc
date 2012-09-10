@@ -107,6 +107,8 @@ int DelayQueue::wait_time( void )
 
   uint64_t now = timestamp();
 
+  tick();
+
   if ( !_delay.empty() ) {
     delay_wait = _delay.front().release_time - now;
     if ( delay_wait < 0 ) {
