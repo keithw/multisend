@@ -3,12 +3,14 @@
 #include <assert.h>
 #include <list>
 #include <stdio.h>
+#include <queue>
+#include <limits.h>
 
-#include "network.h"
 #include "select.h"
+#include "timestamp.h"
+#include "packetsocket.hh"
 
 using namespace std;
-using namespace Network;
 
 class DelayQueue
 {
@@ -225,23 +227,16 @@ void DelayQueue::tick( void )
 
 int main( int argc, char *argv[] )
 {
-  char *key;
-  char *ip;
-  int port;
-  char *up_filename, *down_filename;
+  const char *up_filename, *down_filename, *client_mac;
 
-  assert( argc == 6 );
+  assert( argc == 4 );
 
-  key = argv[ 1 ];
-  ip = argv[ 2 ];
-  port = atoi( argv[ 3 ] );
-  up_filename = argv[ 4 ];
-  down_filename = argv[ 5 ];
+  up_filename = argv[ 1 ];
+  down_filename = argv[ 2 ];
+  client_mac = argv[ 3 ];
 
-  Network::Connection server( NULL, NULL );
-  Network::Connection client( key, ip, port );
-
-  fprintf( stderr, "Port bound is %d, key is %s\n", server.port(), server.get_key().c_str() );
+  PacketSocket internet_side( "eth0", string(), string( client_mac ) );
+  PacketSocket client_side( "eth1", string( client_mac ), string() );
 
   /* Read in schedule */
   uint64_t now = timestamp();
@@ -249,8 +244,8 @@ int main( int argc, char *argv[] )
   DelayQueue downlink( "downlink", 20, down_filename, now );
 
   Select &sel = Select::get_instance();
-  sel.add_fd( server.fd() );
-  sel.add_fd( client.fd() );
+  sel.add_fd( internet_side.fd() );
+  sel.add_fd( client_side.fd() );
 
   while ( 1 ) {
     int wait_time = std::min( uplink.wait_time(), downlink.wait_time() );
@@ -260,24 +255,28 @@ int main( int argc, char *argv[] )
       exit( 1 );
     }
 
-    if ( sel.read( server.fd() ) ) {
-      string p( server.recv_raw() );
-      uplink.write( p );
+    if ( sel.read( client_side.fd() ) ) {
+      std::vector< string > filtered_packets( client_side.recv_raw() );
+      for ( auto it = filtered_packets.begin(); it != filtered_packets.end(); it++ ) {
+	uplink.write( *it );
+      }
     }
 
-    if ( sel.read( client.fd() ) ) {
-      string p( client.recv_raw() );
-      downlink.write( p );
+    if ( sel.read( internet_side.fd() ) ) {
+      std::vector< string > filtered_packets( internet_side.recv_raw() );
+      for ( auto it = filtered_packets.begin(); it != filtered_packets.end(); it++ ) {
+	downlink.write( *it );
+      }
     }
 
     std::vector< string > uplink_packets( uplink.read() );
     for ( auto it = uplink_packets.begin(); it != uplink_packets.end(); it++ ) {
-      client.send_raw( *it );
+      internet_side.send_raw( *it );
     }
 
     std::vector< string > downlink_packets( downlink.read() );
     for ( auto it = downlink_packets.begin(); it != downlink_packets.end(); it++ ) {
-      server.send_raw( *it );
+      client_side.send_raw( *it );
     }
   }
 }
