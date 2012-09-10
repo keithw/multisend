@@ -47,7 +47,7 @@ PacketSocket::PacketSocket( const std::string & s_interface,
 
   /* Bind packet socket to interface */
   struct sockaddr_ll sll;
-  memset( &sll, 0, sizeof( sll ) );
+  sll.sll_family = AF_PACKET;
   sll.sll_protocol = htons( ETH_P_ALL );
   sll.sll_ifindex = index;
 
