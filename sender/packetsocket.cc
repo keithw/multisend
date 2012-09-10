@@ -47,6 +47,7 @@ PacketSocket::PacketSocket( const std::string & s_interface,
 
   /* Bind packet socket to interface */
   struct sockaddr_ll sll;
+  memset( &sll, 0, sizeof( sll ) );
   sll.sll_protocol = htons( ETH_P_ALL );
   sll.sll_ifindex = index;
 
@@ -138,14 +139,21 @@ std::string MACAddress::parse_human( const std::string & with_colons )
 
   unsigned int octets[ 6 ];
 
-  sscanf( with_colons.c_str(),
-	  "%x:%x:%x:%x:%x:%x",
-	  &octets[ 0 ],
-	  &octets[ 1 ],
-	  &octets[ 2 ],
-	  &octets[ 3 ],
-	  &octets[ 4 ],
-	  &octets[ 5 ] );
+  if ( with_colons.empty() ) {
+    for ( int i = 0; i < 6; i++ ) {
+      octets[ i ] = 0xff;
+    }
+  } else {
+    int items_matched = sscanf( with_colons.c_str(),
+				"%x:%x:%x:%x:%x:%x",
+				&octets[ 0 ],
+				&octets[ 1 ],
+				&octets[ 2 ],
+				&octets[ 3 ],
+				&octets[ 4 ],
+				&octets[ 5 ] );
+    assert( items_matched == 6 );
+  }
 
   for ( int i = 0; i < 6; i++ ) {
     assert( octets[ i ] <= 255 );
