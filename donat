@@ -37,9 +37,9 @@ for my $device ( qw[A B] ) {
   my $str = qq{./runon $device shell su -c "$linemod"};
   print "$str\n";
   system( $str );
-  print "Sleeping 1 second for rndis change to take effect ";
-  system("sleep 1");
-  print ("Stop network manager to prevent autoconf");
+  print "Sleeping 3 seconds for rndis change to take effect and adb to reboot \n";
+  system("sleep 3");
+  print ("Stop network manager to prevent autoconf \n");
   system( "sudo service network-manager stop" );
   for my $line ( @script ) {
     my $linemod = $line;
@@ -54,7 +54,7 @@ for my $device ( qw[A B] ) {
   system( "echo 0 | sudo tee /proc/sys/net/ipv4/conf/$dev/rp_filter" );
   system( "echo 1 | sudo tee /proc/sys/net/ipv4/conf/$dev/accept_local" );
   system( "ping -c3 10.100.$num.2" );
-  system( "ping -c3 -I$dev www.google.com" );
+  system( "ping -c3 -I$dev 8.8.8.8" );
 }
 
 # A: 8a:71:5f:ef:c7:5e
