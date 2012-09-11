@@ -32,6 +32,15 @@ for my $device ( qw[A B] ) {
   my ( $num ) = $device =~ tr{ABC}{123}r;
   my $dev = $devs[ $num ];
 
+  my $linemod = "setprop sys.usb.config rndis,adb";
+  $linemod =~ s{DEVICENUM}{$num}g;
+  my $str = qq{./runon $device shell su -c "$linemod"};
+  print "$str\n";
+  system( $str );
+  print "Sleeping 1 second for rndis change to take effect ";
+  system("sleep 1");
+  print ("Stop network manager to prevent autoconf");
+  system( "sudo service network-manager stop" );
   for my $line ( @script ) {
     my $linemod = $line;
     $linemod =~ s{DEVICENUM}{$num}g;
@@ -40,9 +49,12 @@ for my $device ( qw[A B] ) {
     system( $str );
   }
   system( "sudo ifconfig $dev 10.100.$num.1 netmask 255.255.255.0" );
+  system( "sudo route del -net default gw 10.100.$num.2 metric 2" );
   system( "sudo route add -net default gw 10.100.$num.2 metric 2" );
   system( "echo 0 | sudo tee /proc/sys/net/ipv4/conf/$dev/rp_filter" );
   system( "echo 1 | sudo tee /proc/sys/net/ipv4/conf/$dev/accept_local" );
+  system( "ping -c3 10.100.$num.2" );
+  system( "ping -c3 -I$dev www.google.com" );
 }
 
 # A: 8a:71:5f:ef:c7:5e
