@@ -37,6 +37,8 @@ private:
 
   static const int SERVICE_PACKET_SIZE = 1500;
 
+  uint64_t convert_timestamp( const uint64_t absolute_timestamp ) const { return absolute_timestamp - _base_timestamp; }
+
   const string _name;
 
   std::queue< DelayedPacket > _delay;
@@ -54,6 +56,8 @@ private:
 
   uint64_t _queued_bytes;
   uint64_t _bin_sec;
+
+  uint64_t _base_timestamp;
 
   void tick( void );
 
@@ -76,7 +80,8 @@ DelayQueue::DelayQueue( const string & s_name, const uint64_t s_ms_delay, const 
     _total_bytes( 0 ),
     _used_bytes( 0 ),
     _queued_bytes( 0 ),
-    _bin_sec( timestamp() / 1000 )
+    _bin_sec( timestamp() / 1000 ),
+    _base_timestamp( base_timestamp )
 {
   FILE *f = fopen( filename, "r" );
   if ( f == NULL ) {
@@ -169,7 +174,7 @@ void DelayQueue::tick( void )
 	_total_bytes += _limbo.front().packet.contents.size();
 	_used_bytes += _limbo.front().packet.contents.size();
 
-	fprintf( stderr, "%s %f delivery %d\n", _name.c_str(), now / 1000.0, int(now - _limbo.front().packet.entry_time) );
+	fprintf( stderr, "%s %f delivery %d\n", _name.c_str(), convert_timestamp( now ) / 1000.0, int(now - _limbo.front().packet.entry_time) );
 
 	_delivered.push_back( _limbo.front().packet.contents );
 	bytes_to_play_with -= (_limbo.front().packet.contents.size() - _limbo.front().bytes_earned);
@@ -202,7 +207,7 @@ void DelayQueue::tick( void )
 	  _total_bytes += packet.contents.size();
 	  _used_bytes += packet.contents.size();
 
-	  fprintf( stderr, "%s %f delivery %d\n", _name.c_str(), now / 1000.0, int(now - packet.entry_time) );
+	  fprintf( stderr, "%s %f delivery %d\n", _name.c_str(), convert_timestamp( now ) / 1000.0, int(now - packet.entry_time) );
 
 	  _delivered.push_back( packet.contents );
 	  bytes_to_play_with -= packet.contents.size();
@@ -223,7 +228,7 @@ void DelayQueue::tick( void )
   }
 
   while ( now / 1000 > _bin_sec ) {
-    fprintf( stderr, "%s %ld %ld / %ld = %.1f %% %ld \n", _name.c_str(), _bin_sec, _used_bytes, _total_bytes, 100.0 * _used_bytes / (double) _total_bytes , _queued_bytes );
+    fprintf( stderr, "%s %ld %ld / %ld = %.1f %% %ld \n", _name.c_str(), convert_timestamp( 1000 * _bin_sec ) / 1000, _used_bytes, _total_bytes, 100.0 * _used_bytes / (double) _total_bytes , _queued_bytes );
     _total_bytes = 0;
     _used_bytes = 0;
     _queued_bytes = 0;
