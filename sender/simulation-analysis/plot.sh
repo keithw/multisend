@@ -11,7 +11,7 @@ grep downlink $file | grep "/" > downlink.cap
 grep uplink $file | grep "/" > uplink.cap
 grep downlink $file | grep "delivery" > downlink.delay
 grep uplink $file | grep "delivery" > uplink.delay
-export t_offset=`head -n 2 uplink.cap | tail -n 1 | cut -f 2 -d ' '`
+export t_offset=0
 echo "Time offset is $t_offset"
 gnuplot -p plot.p
 mkdir $expt
