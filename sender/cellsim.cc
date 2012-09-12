@@ -52,6 +52,7 @@ private:
   uint64_t _total_bytes;
   uint64_t _used_bytes;
 
+  uint64_t _queued_bytes;
   uint64_t _bin_sec;
 
   void tick( void );
@@ -74,6 +75,7 @@ DelayQueue::DelayQueue( const string & s_name, const uint64_t s_ms_delay, const 
     _ms_delay( s_ms_delay ),
     _total_bytes( 0 ),
     _used_bytes( 0 ),
+    _queued_bytes( 0 ),
     _bin_sec( timestamp() / 1000 )
 {
   FILE *f = fopen( filename, "r" );
@@ -139,6 +141,7 @@ void DelayQueue::write( const string & packet )
   uint64_t now( timestamp() );
   DelayedPacket p( now, now + _ms_delay, packet );
   _delay.push( p );
+  _queued_bytes=_queued_bytes+packet.size();
 }
 
 void DelayQueue::tick( void )
@@ -220,9 +223,10 @@ void DelayQueue::tick( void )
   }
 
   while ( now / 1000 > _bin_sec ) {
-    fprintf( stderr, "%s %ld %ld / %ld = %.1f %%\n", _name.c_str(), _bin_sec, _used_bytes, _total_bytes, 100.0 * _used_bytes / (double) _total_bytes );
+    fprintf( stderr, "%s %ld %ld / %ld = %.1f %% %ld \n", _name.c_str(), _bin_sec, _used_bytes, _total_bytes, 100.0 * _used_bytes / (double) _total_bytes , _queued_bytes );
     _total_bytes = 0;
     _used_bytes = 0;
+    _queued_bytes = 0;
     _bin_sec++;
   }
 }
