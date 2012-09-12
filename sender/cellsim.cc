@@ -80,7 +80,7 @@ DelayQueue::DelayQueue( const string & s_name, const uint64_t s_ms_delay, const 
     _total_bytes( 0 ),
     _used_bytes( 0 ),
     _queued_bytes( 0 ),
-    _bin_sec( timestamp() / 1000 ),
+    _bin_sec( base_timestamp / 1000 ),
     _base_timestamp( base_timestamp )
 {
   FILE *f = fopen( filename, "r" );
@@ -228,7 +228,7 @@ void DelayQueue::tick( void )
   }
 
   while ( now / 1000 > _bin_sec ) {
-    fprintf( stderr, "%s %ld %ld / %ld = %.1f %% %ld \n", _name.c_str(), convert_timestamp( 1000 * _bin_sec ) / 1000, _used_bytes, _total_bytes, 100.0 * _used_bytes / (double) _total_bytes , _queued_bytes );
+    fprintf( stderr, "%s %ld %ld / %ld = %.1f %% %ld \n", _name.c_str(), _bin_sec - (_base_timestamp / 1000), _used_bytes, _total_bytes, 100.0 * _used_bytes / (double) _total_bytes , _queued_bytes );
     _total_bytes = 0;
     _used_bytes = 0;
     _queued_bytes = 0;
