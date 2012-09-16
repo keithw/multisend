@@ -77,7 +77,7 @@ void SaturateServo::recv( void )
       _window -= 20;
     }
 
-    printf( "%d\n", _window );
+    fprintf( _log_file, "%d\n", _window );
   }
 }
 

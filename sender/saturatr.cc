@@ -12,8 +12,8 @@ using namespace std;
 
 int main( int argc, char *argv[] )
 {
-  if ( argc != 1 && argc != 7 ) {
-    fprintf( stderr, "Usage: %s [RELIABLE_IP RELIABLE_DEV TEST_IP TEST_DEV SERVER_IP ID]\n",
+  if ( argc != 1 && argc != 6 ) {
+    fprintf( stderr, "Usage: %s [RELIABLE_IP RELIABLE_DEV TEST_IP TEST_DEV SERVER_IP]\n",
 	     argv[ 0 ]);
     exit( 1 );
   }
@@ -25,6 +25,7 @@ int main( int argc, char *argv[] )
 
   Socket::Address remote_data_address( UNKNOWN ), remote_feedback_address( UNKNOWN );
 
+  uint64_t ts=Socket::timestamp();
   if ( argc == 1 ) { /* server */
     server = true;
     data_socket.bind( Socket::Address( "0.0.0.0", 9001 ) );
@@ -40,7 +41,7 @@ int main( int argc, char *argv[] )
 
     const char *server_ip = argv[ 5 ];
 
-    sender_id = atoi( argv[ 6 ] );
+    sender_id = ( (int)(ts/1e9) );
 
     data_socket.bind( Socket::Address( test_ip, 9003 ) );
     data_socket.bind_to_device( test_dev );
@@ -52,8 +53,7 @@ int main( int argc, char *argv[] )
   }
 
   FILE* log_file;
-  uint64_t ts=Socket::timestamp();
-  char log_file_name[20];
+  char log_file_name[50];
   sprintf(log_file_name,"%s-%d-%d",server ? "server" : "client",(int)(ts/1e9),sender_id);
   log_file=fopen(log_file_name,"w");
 
