@@ -7,19 +7,19 @@ server_time=`echo $server_logs | cut -f 2 -d "-"`
 echo "Server time is "$server_time
 for session in `cat sessions.list` ;
 do 
-   session_ts=`echo $session | cut -f 1 -d "-"`
+   session_name=`echo $session | cut -f 1 -d "-"`
    session_id=`echo $session | cut -f 2 -d "-"`
-   echo "Session ts is "$session_ts;
+   echo "Session name is "$session_name;
    echo "Session id is "$session_id;
 
    # get a tmp server file 
-   grep "senderid=$session_id" $server_logs > server-$server_time-$session_id
+   grep "senderid=$session_id" $server_logs > server-$session_name-$session_id
 
    # prepare the files for simulation
-   nice -n 19 python prep-for-simulation.py client-$session_ts-$session_id $session_id ;
-   nice -n 19 python prep-for-simulation.py server-$server_time-$session_id $session_id ;
+   nice -n 19 python prep-for-simulation.py client-$session_name-$session_id $session_id ;
+   nice -n 19 python prep-for-simulation.py server-$session_name-$session_id $session_id ;
 
    # remove the tmp server file
-   rm server-$server_time-$session_id ;
+   rm server-$session_name-$session_id ;
   
 done
