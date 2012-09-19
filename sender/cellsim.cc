@@ -50,6 +50,7 @@ private:
   std::vector< string > _delivered;
 
   const uint64_t _ms_delay;
+  const float _loss_rate;
 
   uint64_t _total_bytes;
   uint64_t _used_bytes;
@@ -62,14 +63,14 @@ private:
   void tick( void );
 
 public:
-  DelayQueue( const string & s_name, const uint64_t s_ms_delay, const char *filename, const uint64_t base_timestamp );
+  DelayQueue( const string & s_name, const uint64_t s_ms_delay, const char *filename, const uint64_t base_timestamp, const float loss_rate );
 
   int wait_time( void );
   std::vector< string > read( void );
   void write( const string & packet );
 };
 
-DelayQueue::DelayQueue( const string & s_name, const uint64_t s_ms_delay, const char *filename, const uint64_t base_timestamp )
+DelayQueue::DelayQueue( const string & s_name, const uint64_t s_ms_delay, const char *filename, const uint64_t base_timestamp, const float loss_rate )
   : _name( s_name ),
     _delay(),
     _pdp(),
@@ -77,6 +78,7 @@ DelayQueue::DelayQueue( const string & s_name, const uint64_t s_ms_delay, const 
     _schedule(),
     _delivered(),
     _ms_delay( s_ms_delay ),
+    _loss_rate(loss_rate),
     _total_bytes( 0 ),
     _used_bytes( 0 ),
     _queued_bytes( 0 ),
@@ -104,7 +106,7 @@ DelayQueue::DelayQueue( const string & s_name, const uint64_t s_ms_delay, const 
 
     _schedule.push( ms );
   }
-
+  srand(0);
   fprintf( stderr, "Initialized %s queue with %d services.\n", filename, (int)_schedule.size() );
 }
 
@@ -143,10 +145,16 @@ std::vector< string > DelayQueue::read( void )
 
 void DelayQueue::write( const string & packet )
 {
-  uint64_t now( timestamp() );
-  DelayedPacket p( now, now + _ms_delay, packet );
-  _delay.push( p );
-  _queued_bytes=_queued_bytes+packet.size();
+  float r= rand()/(float)RAND_MAX;
+  if (r < _loss_rate) {
+   fprintf(stderr, "Stochastic drop of packet \n" );
+  }
+  else {
+    uint64_t now( timestamp() );
+    DelayedPacket p( now, now + _ms_delay, packet );
+    _delay.push( p );
+    _queued_bytes=_queued_bytes+packet.size();
+  }
 }
 
 void DelayQueue::tick( void )
@@ -239,20 +247,22 @@ void DelayQueue::tick( void )
 int main( int argc, char *argv[] )
 {
   const char *up_filename, *down_filename, *client_mac;
+  float loss_rate;
 
-  assert( argc == 4 );
+  assert( argc == 5 );
 
   up_filename = argv[ 1 ];
   down_filename = argv[ 2 ];
   client_mac = argv[ 3 ];
+  loss_rate = atof(argv[ 4 ]);
 
   PacketSocket internet_side( "eth0", string(), string( client_mac ) );
   PacketSocket client_side( "eth1", string( client_mac ), string() );
 
   /* Read in schedule */
   uint64_t now = timestamp();
-  DelayQueue uplink( "uplink", 20, up_filename, now );
-  DelayQueue downlink( "downlink", 20, down_filename, now );
+  DelayQueue uplink( "uplink", 20, up_filename, now , loss_rate );
+  DelayQueue downlink( "downlink", 20, down_filename, now , loss_rate);
 
   Select &sel = Select::get_instance();
   sel.add_fd( internet_side.fd() );
