@@ -60,6 +60,9 @@ private:
 
   uint64_t _base_timestamp;
 
+  uint32_t _packets_added;
+  uint32_t _packets_dropped;
+
   void tick( void );
 
 public:
@@ -83,7 +86,9 @@ DelayQueue::DelayQueue( const string & s_name, const uint64_t s_ms_delay, const 
     _used_bytes( 0 ),
     _queued_bytes( 0 ),
     _bin_sec( base_timestamp / 1000 ),
-    _base_timestamp( base_timestamp )
+    _base_timestamp( base_timestamp ),
+    _packets_added ( 0 ),
+    _packets_dropped( 0 )
 {
   FILE *f = fopen( filename, "r" );
   if ( f == NULL ) {
@@ -146,8 +151,11 @@ std::vector< string > DelayQueue::read( void )
 void DelayQueue::write( const string & packet )
 {
   float r= rand()/(float)RAND_MAX;
+  _packets_added++;
   if (r < _loss_rate) {
-   fprintf(stderr, "Stochastic drop of packet \n" );
+   _packets_dropped++;
+   fprintf(stderr, "%s , Stochastic drop of packet, _packets_added so far %d , _packets_dropped %d , drop rate %f \n",
+                  _name.c_str(), _packets_added,_packets_dropped , (float)_packets_dropped/(float) _packets_added );
   }
   else {
     uint64_t now( timestamp() );
