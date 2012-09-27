@@ -50,6 +50,8 @@ Socket::Socket()
     perror( "setsockopt" );
     exit( 1 );
   }
+  int reuse_opt = 1;
+  setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &reuse_opt, sizeof( reuse_opt) );
 }
 
 void Socket::connect( const Socket::Address & addr ) const
