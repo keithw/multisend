@@ -28,12 +28,20 @@ system( "echo 0 | sudo tee /proc/sys/net/ipv4/conf/default/rp_filter" );
 system( "echo 1 | sudo tee /proc/sys/net/ipv4/conf/default/accept_local" );
 system( "echo 1 | sudo tee /proc/sys/net/ipv4/conf/default/log_martians" );
 
-for my $device ( qw[A B] ) {
-  my ( $num ) = $device =~ tr{ABC}{123}r;
-  my $dev = $devs[ $num ];
+my @adb_output = `$ENV{'HOME'}/android/android-sdk-linux/platform-tools/adb devices`;
+my @serials = ();
+for my $ind (1 .. $#adb_output-1) {
+    my $srl = (split(/\s+/, $adb_output[$ind]))[0];
+    push(@serials, $srl);
+}
+
+for my $num (0..$#serials) {
+  my $device = $serials[ $num ];
+  my $dev_index = $num + 1;
+  my $dev = $devs[ $dev_index ];
 
   my $linemod = "setprop sys.usb.config rndis,adb";
-  $linemod =~ s{DEVICENUM}{$num}g;
+  $linemod =~ s{DEVICENUM}{$dev_index}g;
   my $str = qq{./runon $device shell su -c "$linemod"};
   print "$str\n";
   system( $str );
@@ -43,17 +51,17 @@ for my $device ( qw[A B] ) {
   system( "sudo service network-manager stop" );
   for my $line ( @script ) {
     my $linemod = $line;
-    $linemod =~ s{DEVICENUM}{$num}g;
+    $linemod =~ s{DEVICENUM}{$dev_index}g;
     my $str = qq{./runon $device shell su -c "$linemod"};
     print "$str\n";
     system( $str );
   }
-  system( "sudo ifconfig $dev 10.100.$num.1 netmask 255.255.255.0" );
-  system( "sudo route del -net default gw 10.100.$num.2 metric 2" );
-  system( "sudo route add -net default gw 10.100.$num.2 metric 2" );
+  system( "sudo ifconfig $dev 10.100.$dev_index.1 netmask 255.255.255.0" );
+  system( "sudo route del -net default gw 10.100.$dev_index.2 metric 2" );
+  system( "sudo route add -net default gw 10.100.$dev_index.2 metric 2" );
   system( "echo 0 | sudo tee /proc/sys/net/ipv4/conf/$dev/rp_filter" );
   system( "echo 1 | sudo tee /proc/sys/net/ipv4/conf/$dev/accept_local" );
-  system( "ping -c3 10.100.$num.2" );
+  system( "ping -c3 10.100.$dev_index.2" );
   system( "ping -c3 -I$dev 8.8.8.8" );
 }
 

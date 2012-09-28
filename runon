@@ -4,11 +4,10 @@ use strict;
 
 my $ADB = 'adb';
 
-my %devices = ( A => '0149A97C0F012017',
-		B => '014696C50601901F' );
+#my %devices = ( A => '0149A44C0C012007', B => '420733a4', C => '351bc75b', D => '890d5903');
 
 my ( $device, @command ) = @ARGV;
 
-die unless exists $devices{ $device };
+#die unless exists $device;
 
-exec { $ADB } ( 'adb', '-s', $devices{ $device }, @command );
+exec { $ADB } ( 'adb', '-s', $device, @command );
