@@ -57,8 +57,8 @@ for my $num (0..$#serials) {
     system( $str );
   }
   system( "sudo ifconfig $dev 10.100.$dev_index.1 netmask 255.255.255.0" );
-  system( "sudo route del -net default gw 10.100.$dev_index.2 metric 2" );
-  system( "sudo route add -net default gw 10.100.$dev_index.2 metric 2" );
+  system( "sudo route del -net default gw 10.100.$dev_index.2 metric 200" );
+  system( "sudo route add -net default gw 10.100.$dev_index.2 metric 200" );
   system( "echo 0 | sudo tee /proc/sys/net/ipv4/conf/$dev/rp_filter" );
   system( "echo 1 | sudo tee /proc/sys/net/ipv4/conf/$dev/accept_local" );
   system( "ping -c3 10.100.$dev_index.2" );
