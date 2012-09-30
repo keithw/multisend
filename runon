@@ -2,7 +2,7 @@
 
 use strict;
 
-my $ADB = 'adb';
+my $ADB = '/home/antenna/android/android-sdk-linux/platform-tools/adb';
 
 #my %devices = ( A => '0149A44C0C012007', B => '420733a4', C => '351bc75b', D => '890d5903');
 
