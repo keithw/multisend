@@ -4,6 +4,8 @@
 #include <assert.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 #include "delay-servo.hh"
 
@@ -35,8 +37,18 @@ double hread( uint64_t in )
   return (double) in / 1.e9;
 }
 
-int main( void )
+int main( int argc, char** argv)
 {
+  if (argc < 6) {
+    fprintf(stderr, "usage: controlled-delay eth0-ip eth0-port lte-ip lte-port lte-device\n");
+    exit(1);
+  }
+  char* eth0_ip = argv[1];
+  int eth0_port = atoi(argv[2]);
+  char* lte_ip = argv[3];
+  int lte_port = atoi(argv[4]);
+  char* lte_device = argv[5];
+
   /* Create and bind Ethernet socket */
   Socket ethernet_socket;
  #ifdef EMULATE
@@ -44,7 +56,7 @@ int main( void )
   ethernet_socket.bind( ethernet_address );
   ethernet_socket.bind_to_device( "lo" );
  #else 
-  Socket::Address ethernet_address( "128.30.76.255", 9000 );
+  Socket::Address ethernet_address( eth0_ip, eth0_port );
   ethernet_socket.bind( ethernet_address );
   ethernet_socket.bind_to_device( "eth0" );
  #endif
@@ -56,8 +68,8 @@ int main( void )
   lte_socket.bind( Socket::Address( "127.0.0.1", 9001 ) );
   lte_socket.bind_to_device( "lo" );
  #else 
-  lte_socket.bind( Socket::Address( "10.100.1.1", 9001 ) );
-  lte_socket.bind_to_device( "usb0" );
+  lte_socket.bind( Socket::Address( lte_ip , lte_port ) );
+  lte_socket.bind_to_device( lte_device );
  #endif
 
   /* Figure out the NAT addresses of each of the three LTE sockets */
@@ -67,7 +79,23 @@ int main( void )
   DelayServo downlink( "DOWN", ethernet_socket, target, lte_socket );
   DelayServo uplink( "UP  ", lte_socket, ethernet_address, ethernet_socket );
 
+  uint64_t num_bits_down = 0;
+  uint64_t num_bits_up = 0;
+
+  uint64_t start_time = Socket::timestamp();
+  printf("%ld\n", start_time);
+
+  uint64_t now = start_time, running_time;
+  bool record_data = false;
   while ( 1 ) {
+    running_time = now-start_time;
+    if (running_time >= (uint64_t)1000000000*5 &&
+	running_time <= (uint64_t)1000000000*35) {
+      record_data = true;
+    } else {
+      record_data = false;
+    }
+
     fflush( NULL );
 
     /* possibly send packet */
@@ -88,11 +116,24 @@ int main( void )
     ppoll( poll_fds, 2, &timeout, NULL );
 
     if ( poll_fds[ 0 ].revents & POLLIN ) {
-      downlink.recv();
+      uint64_t bits_d = downlink.recv();
+      if (record_data) {
+	num_bits_down += bits_d;
+      }
     }
 
     if ( poll_fds[ 1 ].revents & POLLIN ) {
-      uplink.recv();
+      uint64_t bits_u = uplink.recv();
+      if (record_data) {
+        num_bits_up += bits_u;
+      }
+    }
+
+    now = Socket::timestamp();
+    if (now - start_time >= (uint64_t)1000000000*40) {
+      break;
     }
   }
+
+  printf("%ld   %ld %ld\n", Socket::timestamp(), num_bits_down, num_bits_up);
 }

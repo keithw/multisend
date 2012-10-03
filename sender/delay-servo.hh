@@ -37,7 +37,7 @@ public:
 	      const Socket::Address & s_target, const Socket & s_receiver );
 
   void tick( void );
-  void recv( void );
+  uint64_t recv( void );
 
   int wait_time_ns( void ) const;
   int fd( void ) const { return _receiver.get_sock(); }
