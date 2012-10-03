@@ -74,26 +74,23 @@ int main( int argc, char** argv)
 
   /* Figure out the NAT addresses of each of the three LTE sockets */
   Socket::Address target( get_nat_addr( lte_socket, ethernet_address, ethernet_socket ) );
-  fprintf( stderr, "LTE = %s\n", target.str().c_str() );
 
   DelayServo downlink( "DOWN", ethernet_socket, target, lte_socket );
   DelayServo uplink( "UP  ", lte_socket, ethernet_address, ethernet_socket );
 
-  uint64_t num_bits_down = 0;
-  uint64_t num_bits_up = 0;
+  const int duration = 40;
+  uint64_t num_bits_down[duration];
+  uint64_t num_bits_up[duration];
+  for (int i = 0; i < duration; i++) {
+    num_bits_down[i] = 0;
+    num_bits_up[i] = 0;
+  }
 
-  uint64_t start_time = Socket::timestamp();
-  printf("%ld\n", start_time);
-
-  uint64_t now = start_time, running_time;
-  bool record_data = false;
+  uint64_t start_time = Socket::timestamp(), running_time;
   while ( 1 ) {
-    running_time = now-start_time;
-    if (running_time >= (uint64_t)1000000000*5 &&
-	running_time <= (uint64_t)1000000000*35) {
-      record_data = true;
-    } else {
-      record_data = false;
+    running_time = Socket::timestamp()-start_time;
+    if (running_time >= (uint64_t)1000000000*duration) {
+      break;
     }
 
     fflush( NULL );
@@ -116,24 +113,15 @@ int main( int argc, char** argv)
     ppoll( poll_fds, 2, &timeout, NULL );
 
     if ( poll_fds[ 0 ].revents & POLLIN ) {
-      uint64_t bits_d = downlink.recv();
-      if (record_data) {
-	num_bits_down += bits_d;
-      }
+      num_bits_down[ running_time / 1000000000 ] += downlink.recv();
     }
 
     if ( poll_fds[ 1 ].revents & POLLIN ) {
-      uint64_t bits_u = uplink.recv();
-      if (record_data) {
-        num_bits_up += bits_u;
-      }
-    }
-
-    now = Socket::timestamp();
-    if (now - start_time >= (uint64_t)1000000000*40) {
-      break;
+      num_bits_up[ running_time / 1000000000 ] += uplink.recv();
     }
   }
 
-  printf("%ld   %ld %ld\n", Socket::timestamp(), num_bits_down, num_bits_up);
+  for (int i = 0; i < duration; i++) {
+    printf("%ld %ld\n", num_bits_down[i], num_bits_up[i]);
+  }
 }
