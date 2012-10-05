@@ -26,7 +26,13 @@ Socket::Address get_nat_addr( const Socket & sender, const Socket::Address & des
 
   if ( received.payload != to_send ) {
     fprintf( stderr, "Bad packet received while getting NAT addresses.\n" );
-    exit( 1 );
+    for (int i = 0; i < 10; i++) {
+      if (received.payload.at(i) != buf[i]) {
+	fprintf( stderr, "First incorrect character at position %d (got %c, should be %c).\n", i, received.payload.at(i), buf[i] );
+	exit( 1 );
+      }
+    }
+    assert(false); // we should never get here
   }
 
   return received.addr;
