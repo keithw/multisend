@@ -1,14 +1,15 @@
 #!/usr/bin/perl -w
 
 use strict;
+use Sys::HostIP;
 
 die unless scalar(@ARGV) >= 1;
 
 for my $i (1 .. $ARGV[0]) {
-    my $eth0_ip = '18.238.2.50';
+    my $eth0_ip = Sys::HostIP->interfaces->{"eth0"};
     my $eth0_port = 9100 + $i;
-    my $lte_ip = '10.100.'.$i.'.1';
-    my $lte_port = 9000 + $i;
     my $lte_device = 'usb'.($i-1);
+    my $lte_ip = Sys::HostIP->interfaces->{$lte_device};
+    my $lte_port = 9000 + $i;
     system("./controlled-delay $eth0_ip $eth0_port $lte_ip $lte_port $lte_device &");
 }
