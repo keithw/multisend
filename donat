@@ -64,7 +64,7 @@ for my $num (0..$#serials) {
   system( "echo 0 | sudo tee /proc/sys/net/ipv4/conf/$dev/rp_filter" );
   system( "echo 1 | sudo tee /proc/sys/net/ipv4/conf/$dev/accept_local" );
   system( "ping -n -c10 10.100.$dev_index.2" );
-  system( "ping -n -c10 -I$dev 8.8.8.8" );
+  system( "ping -n -c10 -I$dev 18.181.5.52" );
 }
 
 # A: 8a:71:5f:ef:c7:5e
