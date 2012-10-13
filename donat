@@ -28,13 +28,17 @@ system( "echo 0 | sudo tee /proc/sys/net/ipv4/conf/default/rp_filter" );
 system( "echo 1 | sudo tee /proc/sys/net/ipv4/conf/default/accept_local" );
 system( "echo 1 | sudo tee /proc/sys/net/ipv4/conf/default/log_martians" );
 
-my @adb_output = `$ENV{'HOME'}/android/android-sdk-linux/platform-tools/adb devices`;
-my @serials = ();
-for my $ind (1 .. $#adb_output-1) {
-    print "SERIAL: $adb_output[$ind]\n";
-    my $srl = (split(/\s+/, $adb_output[$ind]))[0];
-    push(@serials, $srl);
+open DEVICELIST, "$ENV{'HOME'}/android/android-sdk-linux/platform-tools/adb devices |" or die "$!";
+
+my @serials;
+
+while (<DEVICELIST>) {
+  next unless /device$/;
+  my ( $serial ) = ( split /\s+/, $_ )[ 0 ];
+  push @serials, $serial;
 }
+
+close DEVICELIST or die "$!";
 
 for my $num (0..$#serials) {
   my $device = $serials[ $num ];
