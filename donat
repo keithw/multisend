@@ -47,7 +47,7 @@ for my $num (0..$#serials) {
   my $str = qq{./runon $device shell su -c "$linemod"};
   print "$str\n";
   system( $str );
-  print "Sleeping 3 seconds for rndis change to take effect and adb to reboot \n";
+  print "Sleeping 5 seconds for rndis change to take effect and adb to reboot \n";
   system("sleep 5");
 #  print ("Stop network manager to prevent autoconf \n");
 #  system( "sudo service network-manager stop" );
@@ -63,8 +63,8 @@ for my $num (0..$#serials) {
   system( "sudo route add -net default gw 10.100.$dev_index.2 metric 200" );
   system( "echo 0 | sudo tee /proc/sys/net/ipv4/conf/$dev/rp_filter" );
   system( "echo 1 | sudo tee /proc/sys/net/ipv4/conf/$dev/accept_local" );
-  system( "ping -c3 10.100.$dev_index.2" );
-  system( "ping -c3 -I$dev 8.8.8.8" );
+  system( "ping -n -c10 10.100.$dev_index.2" );
+  system( "ping -n -c10 -I$dev 8.8.8.8" );
 }
 
 # A: 8a:71:5f:ef:c7:5e
