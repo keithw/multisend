@@ -16,7 +16,7 @@ my @script = ( q[iptables -t nat -F],
 	       q[ifconfig rndis0 10.100.DEVICENUM.2 netmask 255.255.255.0 up],
 	       q[echo 1 > /proc/sys/net/ipv4/ip_forward] );
 
-my @devs = ( 'x', 'usb0', 'usb1', 'usb2' );
+#my @devs = ( 'x', 'usb0', 'usb1', 'usb2' );
 
 system( "echo 0 | sudo tee /proc/sys/net/ipv4/conf/all/rp_filter" );
 system( "echo 1 | sudo tee /proc/sys/net/ipv4/conf/all/accept_local" );
@@ -31,6 +31,7 @@ system( "echo 1 | sudo tee /proc/sys/net/ipv4/conf/default/log_martians" );
 my @adb_output = `$ENV{'HOME'}/android/android-sdk-linux/platform-tools/adb devices`;
 my @serials = ();
 for my $ind (1 .. $#adb_output-1) {
+    print "SERIAL: $adb_output[$ind]\n";
     my $srl = (split(/\s+/, $adb_output[$ind]))[0];
     push(@serials, $srl);
 }
@@ -38,7 +39,8 @@ for my $ind (1 .. $#adb_output-1) {
 for my $num (0..$#serials) {
   my $device = $serials[ $num ];
   my $dev_index = $num + 1;
-  my $dev = $devs[ $dev_index ];
+#  my $dev = $devs[ $dev_index ];
+  my $dev = "cell-$serials[ $num ]";
 
   my $linemod = "setprop sys.usb.config rndis,adb";
   $linemod =~ s{DEVICENUM}{$dev_index}g;
@@ -46,9 +48,9 @@ for my $num (0..$#serials) {
   print "$str\n";
   system( $str );
   print "Sleeping 3 seconds for rndis change to take effect and adb to reboot \n";
-  system("sleep 3");
-  print ("Stop network manager to prevent autoconf \n");
-  system( "sudo service network-manager stop" );
+  system("sleep 5");
+#  print ("Stop network manager to prevent autoconf \n");
+#  system( "sudo service network-manager stop" );
   for my $line ( @script ) {
     my $linemod = $line;
     $linemod =~ s{DEVICENUM}{$dev_index}g;
