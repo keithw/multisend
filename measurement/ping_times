@@ -1,0 +1,88 @@
+#!/usr/bin/perl -w
+
+use strict;
+use Sys::Hostname;
+
+# List the Android RNDIS network interfaces
+sub get_interfaces {
+  my @ret;
+
+  open INTERFACES, "ip link |" or die "$!";
+  while ( <INTERFACES> ) {
+    my ( $number, $name ) = split /[\s:]+/, $_;
+    if ( $name =~ m{^cell-} ) {
+      push @ret, $name;
+    }
+  }
+  close INTERFACES or die "$!";
+
+  return @ret;
+}
+
+sub stripped_mean {
+  my $sum = 0;
+
+  my @stripped = sort { $a <=> $b } @_;
+
+  for ( 1 .. 3 ) { shift @stripped }
+  for ( 1 .. 3 ) { pop @stripped }
+
+  for ( @_ ) {
+    $sum += $_;
+  }
+
+  if ( scalar @_ == 0 ) {
+    return -1;
+  } else {
+    return $sum / (scalar @_);
+  }
+}
+
+# Ping VM on an interface
+sub ping_on_interface {
+  my ( $interface_name ) = @_;
+
+  my @pings;
+
+  open PING, "ping -n -I$interface_name -c 16 -W 10 18.181.5.52 2>&1 -i0.2 |" or die "$!";
+
+  while ( <PING> ) {
+    if ( my ( $num, $ttl, $time ) = m{icmp_req=(.*?) ttl=(.*?) time=(.*?) ms} ) {
+      push @pings, $time / 1000.0;
+    }
+  }
+
+  close PING;
+
+  return stripped_mean( @pings );
+}
+
+if ( scalar @ARGV > 0 and $ARGV[ 0 ] eq "config" ) {
+  my @interfaces = get_interfaces;
+  for ( @interfaces ) { s{-}{_}g }
+  @interfaces = sort @interfaces;
+  my $hostname = hostname;
+  print <<END;
+graph_vlabel round-trip time (s)
+graph_args --base 1000 --units=si --logarithmic
+graph_scale no
+graph_title Round-trip time per phone (s)
+graph_category DAS
+graph_info This graph measures the ping time to the Munin server through each phone.
+graph_order @interfaces
+END
+  for ( @interfaces ) {
+    print "$_.label $hostname $_\n";
+  }
+  exit;
+}
+
+my @interfaces = get_interfaces;
+for my $interface ( @interfaces ) {
+  my $interface_print = $interface;
+  $interface_print =~ s{-}{_}g;
+  my $ping_time = ping_on_interface( $interface );
+  if ( $ping_time >= 0 ) {
+      printf "%s.value %f\n", $interface_print, $ping_time;
+  }
+}
