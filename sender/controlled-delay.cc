@@ -24,7 +24,7 @@ Socket::Address get_nat_addr( const Socket & sender, const Socket::Address & des
   sender.send( Socket::Packet( dest, to_send ) );
   Socket::Packet received( UNKNOWN, "" );
   
-  for ( int tries = 0; tries < 10; tries++ ) {
+  for ( int tries = 0; tries < 20; tries++ ) {
     try {
       received = receiver.recv();
       break;
