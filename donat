@@ -13,6 +13,11 @@ my @script = ( q[iptables -t nat -F],
 	       q[iptables -A FORWARD -j ACCEPT -o rmnet0 -i rndis0],
 	       q[iptables -A FORWARD -j ACCEPT -o rmnet1 -i rndis0],
 	       q[iptables -A FORWARD -j ACCEPT -o rmnet2 -i rndis0],
+	       q[iptables -A FORWARD -j ACCEPT -o rmnet3 -i rndis0],
+	       q[iptables -A FORWARD -j ACCEPT -o rmnet4 -i rndis0],
+	       q[iptables -A FORWARD -j ACCEPT -o rmnet5 -i rndis0],
+	       q[iptables -A FORWARD -j ACCEPT -o rmnet6 -i rndis0],
+	       q[iptables -A FORWARD -j ACCEPT -o rmnet7 -i rndis0],
 	       q[ifconfig rndis0 10.100.DEVICENUM.2 netmask 255.255.255.0 up],
 	       q[echo 1 > /proc/sys/net/ipv4/ip_forward] );
 
