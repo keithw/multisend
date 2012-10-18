@@ -22,7 +22,20 @@ Socket::Address get_nat_addr( const Socket & sender, const Socket::Address & des
   string to_send( buf, 10 );
 
   sender.send( Socket::Packet( dest, to_send ) );
-  Socket::Packet received( receiver.recv() );
+  Socket::Packet received( UNKNOWN, "" );
+  
+  for ( int tries = 0; tries < 10; tries++ ) {
+    try {
+      received = receiver.recv();
+      break;
+    } catch ( int x ) {
+      if ( x == EAGAIN || x == EWOULDBLOCK ) {
+	sleep( 1 );
+      } else {
+	exit( 1 );
+      }
+    }
+  }
 
   if ( received.payload != to_send ) {
     fprintf( stderr, "Bad packet received while getting NAT addresses.\n" );
@@ -128,6 +141,6 @@ int main( int argc, char** argv)
   }
 
   for (int i = 0; i < duration; i++) {
-    printf("%ld %ld\n", num_bits_down[i], num_bits_up[i]);
+    printf("%ld %ld %ld\n", start_time / 1000000000 + i, num_bits_down[i], num_bits_up[i]);
   }
 }

@@ -111,10 +111,10 @@ Socket::Packet Socket::recv( void ) const
   header.msg_controllen = BUF_SIZE;
   header.msg_flags = 0;
 
-  ssize_t received_len = recvmsg( sock, &header, 0 );
+  ssize_t received_len = recvmsg( sock, &header, MSG_DONTWAIT );
   if ( received_len < 0 ) {
     perror( "recvmsg" );
-    exit( 1 );
+    throw errno;
   }
 
   if ( received_len > BUF_SIZE ) {
