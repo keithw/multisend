@@ -107,7 +107,9 @@ for my $interface ( @interfaces ) {
 
 print "multigraph ping_times\n";
 for ( keys %values ) {
-  print "$_.value $values{ $_ }{ time }\n";
+  if ( $values{ $_ }{ time } >= 0 ) {
+    print "$_.value $values{ $_ }{ time }\n";
+  }
 }
 
 print "multigraph ping_losses\n";
