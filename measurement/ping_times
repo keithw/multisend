@@ -54,7 +54,9 @@ sub ping_on_interface {
 
   close PING;
 
-  return stripped_mean( @pings );
+  my $mean_rtt = stripped_mean( @pings );
+  my $connectivity = (scalar @pings) / 16.0;
+  return ( $mean_rtt, 100 * (1.0 - $connectivity) );
 }
 
 if ( scalar @ARGV > 0 and $ARGV[ 0 ] eq "config" ) {
@@ -62,27 +64,53 @@ if ( scalar @ARGV > 0 and $ARGV[ 0 ] eq "config" ) {
   for ( @interfaces ) { s{-}{_}g }
   @interfaces = sort @interfaces;
   my $hostname = hostname;
+
   print <<END;
+multigraph ping_times
 graph_vlabel round-trip time (s)
 graph_args --base 1000 --units=si --logarithmic
 graph_scale no
 graph_title Round-trip time per phone (s)
 graph_category DAS
 graph_info This graph measures the ping time to the Munin server through each phone.
-graph_order @interfaces
 END
   for ( @interfaces ) {
     print "$_.label $hostname $_\n";
   }
+
+  print <<END;
+multigraph ping_losses
+graph_vlabel packet loss rate (%)
+graph_args --base 1000
+graph_scale no
+graph_title Round-trip loss rate per phone (%)
+graph_category DAS
+graph_info This graph measures the round-trip ICMP ping loss rate to the Munin server through each phone.
+END
+  for ( @interfaces ) {
+    print "$_.label $hostname $_\n";
+  }
+
   exit;
 }
+
+my %values;
 
 my @interfaces = get_interfaces;
 for my $interface ( @interfaces ) {
   my $interface_print = $interface;
   $interface_print =~ s{-}{_}g;
-  my $ping_time = ping_on_interface( $interface );
-  if ( $ping_time >= 0 ) {
-      printf "%s.value %f\n", $interface_print, $ping_time;
-  }
+  my ( $ping_time, $loss_rate ) = ping_on_interface( $interface );
+  $values{ $interface_print }{ time } = $ping_time;
+  $values{ $interface_print }{ loss } = $loss_rate;
+}
+
+print "multigraph ping_times\n";
+for ( keys %values ) {
+  print "$_.value $values{ $_ }{ time }\n";
+}
+
+print "multigraph ping_losses\n";
+for ( keys %values ) {
+  print "$_.value $values{ $_ }{ loss }\n";
 }
