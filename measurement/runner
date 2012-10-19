@@ -15,11 +15,11 @@ my @handles;
 
 for my $hostname ( keys %hosts ) {
   my $ip = $hosts{ $hostname }{ ip };
-  print STDERR "hostname: $hostname\n";
   my $port_offset = 9000 + int( rand 20000 );
   for my $phone ( @{ $hosts{ $hostname }{ phones } } ) {
     my $home_port = $port_offset + 1;
     my $lte_port = $port_offset + 2;
+    print STDERR "running $hostname $phone $home_port <=> $lte_port\n";
     open ( my $fh,
 	   qq{ssh root\@$ip /home/antenna/multisend/sender/controlled-delay $ip $home_port \\`/home/antenna/multisend/measurement/getip cell-$phone\\` $lte_port cell-$phone 2>&1 |} ) or die "$!";
     $port_offset += 10;
