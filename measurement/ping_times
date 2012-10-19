@@ -44,7 +44,7 @@ sub ping_on_interface {
 
   my @pings;
 
-  open PING, "ping -n -I$interface_name -c 16 -W 10 18.181.5.52 2>&1 -i0.2 |" or die "$!";
+  open PING, "ping -n -I$interface_name -c 32 -W 10 18.181.5.52 2>&1 -i0.2 |" or die "$!";
 
   while ( <PING> ) {
     if ( my ( $num, $ttl, $time ) = m{icmp_req=(.*?) ttl=(.*?) time=(.*?) ms} ) {
@@ -55,7 +55,7 @@ sub ping_on_interface {
   close PING;
 
   my $mean_rtt = stripped_mean( @pings );
-  my $connectivity = (scalar @pings) / 16.0;
+  my $connectivity = (scalar @pings) / 32.0;
   return ( $mean_rtt, 100 * (1.0 - $connectivity) );
 }
 
