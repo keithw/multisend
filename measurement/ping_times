@@ -24,17 +24,17 @@ sub stripped_mean {
 
   my @stripped = sort { $a <=> $b } @_;
 
-  for ( 1 .. 3 ) { shift @stripped }
-  for ( 1 .. 3 ) { pop @stripped }
+  for ( 1 .. 10 ) { shift @stripped }
+  for ( 1 .. 10 ) { pop @stripped }
 
-  for ( @_ ) {
+  for ( @stripped ) {
     $sum += $_;
   }
 
-  if ( scalar @_ == 0 ) {
+  if ( scalar @stripped == 0 ) {
     return -1;
   } else {
-    return $sum / (scalar @_);
+    return $sum / (scalar @stripped);
   }
 }
 
@@ -44,7 +44,7 @@ sub ping_on_interface {
 
   my @pings;
 
-  open PING, "ping -n -I$interface_name -c 32 -W 10 18.181.5.52 2>&1 -i0.2 |" or die "$!";
+  open PING, "ping -n -I$interface_name -c 60 -W 10 18.181.5.52 2>&1 -i0.2 |" or die "$!";
 
   while ( <PING> ) {
     if ( my ( $num, $ttl, $time ) = m{icmp_req=(.*?) ttl=(.*?) time=(.*?) ms} ) {
