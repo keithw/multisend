@@ -21,7 +21,7 @@ for my $hostname ( keys %hosts ) {
     my $home_port = $port_offset + 1;
     my $lte_port = $port_offset + 2;
     open ( my $fh,
-	   qq{ssh -t root\@$ip /home/antenna/multisend/sender/controlled-delay $ip $home_port \\`/home/antenna/multisend/measurement/getip cell-$phone\\` $lte_port cell-$phone |} ) or die "$!";
+	   qq{ssh -t root\@$ip /home/antenna/multisend/sender/controlled-delay $ip $home_port \\`/home/antenna/multisend/measurement/getip cell-$phone\\` $lte_port cell-$phone 2>&1 |} ) or die "$!";
     $port_offset += 10;
     push @handles, $fh;
   }

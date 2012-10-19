@@ -32,6 +32,7 @@ Socket::Address get_nat_addr( const Socket & sender, const Socket::Address & des
       if ( x == EAGAIN || x == EWOULDBLOCK ) {
 	sleep( 1 );
       } else {
+	fprintf( stderr, "Exiting with errno = %d\n", errno );
 	exit( 1 );
       }
     }
