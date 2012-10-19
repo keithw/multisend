@@ -99,9 +99,9 @@ if ( $seconds >= 1 ) {
   printf "uplink total: %d bits / %d seconds = %.3f Mbps\n", $overall_uplink_total, $seconds, 1.e-6 * ($overall_uplink_total / $seconds);
 
   for my $phone ( keys %phone_downlink_total ) {
-    $raw_st->execute( $phone, $last_time, $seconds,
-		      $phone_downlink_total{ $phone } / $seconds,
-		      $phone_uplink_total{ $phone } / $seconds )
+    $smoothed_st->execute( $phone, $last_time, $seconds,
+			   $phone_downlink_total{ $phone } / $seconds,
+			   $phone_uplink_total{ $phone } / $seconds )
       or die $dbh->errstr;
 
     printf "$phone downlink: %d bits / %d seconds = %.3f Mbps\n", $phone_downlink_total{ $phone }, $seconds, 1.e-6 * ($phone_downlink_total{ $phone } / $seconds);
