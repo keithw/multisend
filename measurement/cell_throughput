@@ -3,7 +3,7 @@
 use strict;
 use DBI;
 
-my $dbh = DBI->connect( q{dbi:Pg:dbname=das}, q{}, q{}, {AutoCommit => 0} );
+my $dbh = DBI->connect( q{dbi:Pg:dbname=das}, q{}, q{}, {AutoCommit => 1} );
 
 if ( !defined $dbh ) {
   die "Could not open database.";
