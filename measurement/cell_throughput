@@ -73,7 +73,7 @@ down.graph no
 down.min 0
 up.min 0
 up.label Throughput
-up.negative down
+down.negative up
 END
   }
   exit;
