@@ -141,6 +141,6 @@ int main( int argc, char** argv)
   }
 
   for (int i = 0; i < duration; i++) {
-    printf("%ld %ld %ld\n", start_time / 1000000000 + i, num_bits_down[i], num_bits_up[i]);
+    printf("%s %ld %ld %ld\n", lte_device, start_time / 1000000000 + i, num_bits_down[i], num_bits_up[i]);
   }
 }

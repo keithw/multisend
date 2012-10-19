@@ -21,9 +21,9 @@ private:
   unsigned int _packets_sent, _packets_received;
 
   static const unsigned int PACKET_SIZE = 1400; /* bytes */
-  static constexpr double QUEUE_DURATION_TARGET = 1.0; /* seconds */
-  static constexpr double STEERING_TIME = 0.25; /* seconds */
-  static constexpr double MINIMUM_RATE = 20.0; /* packets per second */
+  static constexpr double QUEUE_DURATION_TARGET = 1.5; /* seconds */
+  static constexpr double STEERING_TIME = 0.2; /* seconds */
+  static constexpr double MINIMUM_RATE = 10.0; /* packets per second */
 
   int _unique_id;
 
