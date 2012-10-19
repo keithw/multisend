@@ -92,8 +92,8 @@ while ( my ( $phone, $down, $up ) = $separate_st->fetchrow_array ) {
   $phone =~ s{-}{_}g;
 
   print qq{multigraph ${phone}_throughput\n};
-  print qq{down.value $down\n};
-  print qq{up.value $up\n};
+  print qq{${phone}_down.value $down\n};
+  print qq{${phone}_up.value $up\n};
 }
 
   print qq{multigraph working_phones\n};
