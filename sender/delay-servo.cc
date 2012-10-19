@@ -26,6 +26,11 @@ int DelayServo::wait_time_ns( void ) const
   return _next_transmission - Socket::timestamp();
 }
 
+double DelayServo::loss_rate( void ) const
+{
+  return (double) _hist.num_lost() / (double) _packets_sent;
+}
+
 uint64_t DelayServo::recv( void )
 {
   Socket::Packet incoming( _receiver.recv() );
@@ -37,18 +42,6 @@ uint64_t DelayServo::recv( void )
     _hist.packet_received( *contents );
     _packets_received++;
   }
-
-  double loss_rate = (double) _hist.num_lost() / (double) _packets_sent;
-  fprintf( stderr, "%s seq = %d delay = %f recvrate = %f queueest = %f outstanding = %d Mbps = %f lost = %.5f%% arrivemilli = %ld\n",
-	   _name.c_str(),
-	   contents->sequence_number,
-	   (double) (contents->recv_timestamp - contents->sent_timestamp) / 1.0e9,
-	   _rate_estimator.get_rate(),
-	   (double) _hist.num_outstanding() / _rate_estimator.get_rate(),
-	   _hist.num_outstanding(),
-	   _rate_estimator.get_rate() * PACKET_SIZE * 8.0 / 1.0e6,
-	   loss_rate * 100,
-	   contents->recv_timestamp / 1000000 );
 
   return incoming.payload.size()*8;
 }

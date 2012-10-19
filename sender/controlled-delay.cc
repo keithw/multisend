@@ -100,9 +100,13 @@ int main( int argc, char** argv)
   const int duration = 40;
   uint64_t num_bits_down[duration];
   uint64_t num_bits_up[duration];
+  double downlink_loss_rate[duration];
+  double uplink_loss_rate[duration];
   for (int i = 0; i < duration; i++) {
     num_bits_down[i] = 0;
     num_bits_up[i] = 0;
+    downlink_loss_rate[i] = 0.0;
+    uplink_loss_rate[i] = 0.0;
   }
 
   uint64_t start_time = Socket::timestamp(), running_time;
@@ -138,9 +142,12 @@ int main( int argc, char** argv)
     if ( poll_fds[ 1 ].revents & POLLIN ) {
       num_bits_up[ running_time / 1000000000 ] += uplink.recv();
     }
+
+    downlink_loss_rate[ running_time / 1000000000 ] = downlink.loss_rate();
+    uplink_loss_rate[ running_time / 1000000000 ] = uplink.loss_rate();
   }
 
   for (int i = 0; i < duration; i++) {
-    printf("%s %ld %ld %ld\n", lte_device, start_time / 1000000000 + i, num_bits_down[i], num_bits_up[i]);
+    printf("%s %ld %ld %ld %.5f %.5f\n", lte_device, start_time / 1000000000 + i, num_bits_down[i], num_bits_up[i], downlink_loss_rate[i], uplink_loss_rate[i]);
   }
 }

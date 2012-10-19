@@ -41,6 +41,7 @@ public:
 
   int wait_time_ns( void ) const;
   int fd( void ) const { return _receiver.get_sock(); }
+  double loss_rate( void ) const;
 };
 
 #endif
