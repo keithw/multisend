@@ -16,7 +16,7 @@ my @handles;
 for my $hostname ( keys %hosts ) {
   my $ip = $hosts{ $hostname }{ ip };
   print STDERR "hostname: $hostname\n";
-  my $port_offset = 9000;
+  my $port_offset = 9000 + int( rand 20000 );
   for my $phone ( @{ $hosts{ $hostname }{ phones } } ) {
     my $home_port = $port_offset + 1;
     my $lte_port = $port_offset + 2;
