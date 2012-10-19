@@ -1,0 +1,100 @@
+#!/usr/bin/perl -w
+
+use strict;
+use DBI;
+
+my $dbh = DBI->connect( q{dbi:Pg:dbname=das}, q{}, q{}, {AutoCommit => 0} );
+
+if ( !defined $dbh ) {
+  die "Could not open database.";
+}
+
+my $phonelist_st = $dbh->prepare( q{SELECT DISTINCT phone FROM smoothed} )
+    or die $dbh->errstr;
+
+my $sum_st = $dbh->prepare( q{SELECT time, SUM(downlink_bps), SUM(uplink_bps) FROM smoothed GROUP BY time ORDER BY time DESC LIMIT 1} )
+    or die $dbh->errstr;
+
+my $separate_st = $dbh->prepare( q{SELECT phone, downlink_bps, uplink_bps FROM smoothed WHERE time = ?} )
+  or die $dbh->errstr;
+
+if ( scalar @ARGV > 0 and $ARGV[ 0 ] eq "config" ) {
+  $phonelist_st->execute() or die $dbh->errstr;
+
+  my @phones;
+  while ( my @row = $phonelist_st->fetchrow_array ) {
+    my $phone = $row[ 0 ];
+    $phone =~ s{-}{_}g;
+    push @phones, $phone;
+  }
+
+  print <<END;
+multigraph downlink_total
+graph_vlabel bits per second
+graph_args --base 1000 --units=si
+graph_scale no
+graph_title Total downlink bits per second
+graph_category DAS
+graph_info This graph measures the total smoothed bits per second in the downlink direction.
+down.label Downlink
+END
+
+  print <<END;
+multigraph uplink_total
+graph_vlabel bits per second
+graph_args --base 1000 --units=si
+graph_scale no
+graph_title Total uplink bits per second
+graph_category DAS
+graph_info This graph measures the total smoothed bits per second in the uplink direction.
+up.label Uplink
+END
+
+  print <<END;
+multigraph working_phones
+graph_vlabel Number of phones
+graph_args --base 1000 --units=si
+graph_scale no
+graph_title Number of phones with network connection
+graph_category DAS
+graph_info This graph measures the number of working cell phones.
+count.label Count
+END
+
+  for my $phone ( @phones ) {
+    print <<END;
+multigraph $phone_throughput
+graph_vlabel bits up (-) / down (+) per second
+graph_args --base 1000 --units=si
+graph_title $phone available throughput
+graph_category DAS
+graph_info This graph measures the smoothed bits per second of phone $phone.
+$phone_down.label Uplink
+$phone_up.label Uplink
+$phone_up.negative $phone_down
+END
+  }
+  exit;
+}
+
+$sum_st->execute() or die $dbh->errstr;
+my ( $time, $down, $up ) = $sum_st->fetchrow_array;
+
+print qq{multigraph downlink_total\n};
+print qq{down.value $down\n};
+print qq{multigraph uplink_total\n};
+print qq{up.value $up\n};
+
+$separate_st->execute( $time ) or die $dbh->errstr;
+my $phonecount = 0;
+while ( my ( $phone, $down, $up ) = $separate_st->fetchrow_array ) {
+  $phonecount++;
+  $phone =~ s{-}{_}g;
+
+  print qq{multigraph $phone_throughput\n};
+  print qq{down.value $down\n};
+  print qq{up.value $up\n};
+}
+
+  print qq{multigraph working_phones\n};
+  print qq{count.value $phonecount\n};
