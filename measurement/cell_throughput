@@ -69,10 +69,10 @@ graph_title $phone available throughput
 graph_category DAS
 graph_info This graph measures the smoothed bits per second of phone $phone.
 down.label Downlink
-down.graph no
+up.graph no
 down.min 0
 up.min 0
-up.label Throughput
+down.label Throughput
 down.negative up
 END
   }
