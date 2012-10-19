@@ -28,7 +28,7 @@ for my $hostname ( keys %hosts ) {
 }
 
 for my $handle ( @handles ) {
-  while ( my $line = < $handle > ) {
+  while ( my $line = <$handle> ) {
     print $line;
   }
 
