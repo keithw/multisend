@@ -70,7 +70,7 @@ graph_info This graph measures the smoothed bits per second of phone $phone.
 up.graph no
 down.min 0
 up.min 0
-up.label Throughput
+up.label uplink
 down.label Throughput
 down.negative up
 END
