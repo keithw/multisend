@@ -22,12 +22,18 @@ Socket::Address get_nat_addr( const Socket & sender, const Socket::Address & des
   string to_send( buf, 10 );
 
   sender.send( Socket::Packet( dest, to_send ) );
+  sender.send( Socket::Packet( dest, to_send ) );
+  sender.send( Socket::Packet( dest, to_send ) );
+  sender.send( Socket::Packet( dest, to_send ) );
+  sender.send( Socket::Packet( dest, to_send ) );
   Socket::Packet received( UNKNOWN, "" );
   
   for ( int tries = 0; tries < 20; tries++ ) {
     try {
       received = receiver.recv();
-      break;
+      if ( received.payload == to_send ) {
+	return received.addr;
+      }
     } catch ( int x ) {
       if ( x == EAGAIN || x == EWOULDBLOCK || x == EINVAL ) {
 	sleep( 1 );
@@ -39,18 +45,8 @@ Socket::Address get_nat_addr( const Socket & sender, const Socket::Address & des
     }
   }
 
-  if ( received.payload != to_send ) {
-    fprintf( stderr, "Bad packet received while getting NAT addresses.\n" );
-    for (int i = 0; i < 10; i++) {
-      if (received.payload.at(i) != buf[i]) {
-	fprintf( stderr, "First incorrect character at position %d (got %c, should be %c).\n", i, received.payload.at(i), buf[i] );
-	exit( 1 );
-      }
-    }
-    assert(false); // we should never get here
-  }
-
-  return received.addr;
+  fprintf( stderr, "Could not get NAT address\n" );
+  exit( 1 );
 }
 
 double hread( uint64_t in )
