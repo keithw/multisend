@@ -27,10 +27,58 @@ for my $hostname ( keys %hosts ) {
   }
 }
 
+my %speed;
+
 for my $handle ( @handles ) {
   while ( my $line = <$handle> ) {
-    print $line;
+    if ( $line =~ m{^cell-} ) {
+      my ( $phone, $time, $downlink_bps, $uplink_bps ) = split /\s+/, $line;
+      $speed{ $time }{ $phone }{ down } = $downlink_bps;
+      $speed{ $time }{ $phone }{ up } = $uplink_bps;
+#      print STDERR $line;
+    }
   }
 
   close $handle;
+}
+
+# find most overlapping phones
+my $max_phones = 0;
+for my $time ( sort { $a <=> $b } keys %speed ) {
+  my $phone_count = scalar keys %{ $speed{ $time } };
+  if ( $phone_count > $max_phones ) {
+    $max_phones = $phone_count;
+  }
+}
+
+# average seconds with all phones
+my %phone_downlink_total;
+my %phone_uplink_total;
+my $overall_downlink_total;
+my $overall_uplink_total;
+my $seconds = -2;
+for my $time ( sort { $a <=> $b } keys %speed ) {
+  my $phone_count = scalar keys %{ $speed{ $time } };
+  if ( $phone_count == $max_phones ) {
+    $seconds++;
+    if ( $seconds >= 1 ) {
+      for my $phone ( keys %{ $speed{ $time } } ) {
+	$phone_downlink_total{ $phone } += $speed{ $time }{ $phone }{ down };
+	$phone_uplink_total{ $phone } += $speed{ $time }{ $phone }{ up };
+	$overall_downlink_total += $speed{ $time }{ $phone }{ down };
+	$overall_uplink_total += $speed{ $time }{ $phone }{ up };
+      }
+    }
+  }
+}
+
+
+if ( $seconds >= 1 ) {
+  printf "downlink total: %d bits / %d seconds = %.3g bps\n", $overall_downlink_total, $seconds, $overall_downlink_total / $seconds;
+  printf "uplink total: %d bits / %d seconds = %.3g bps\n", $overall_uplink_total, $seconds, $overall_uplink_total / $seconds;
+
+  for my $phone ( keys %phone_downlink_total ) {
+    printf "$phone downlink: %d bits / %d seconds = %.3g bps\n", $phone_downlink_total{ $phone }, $seconds, $phone_downlink_total{ $phone } / $seconds;
+    printf "$phone uplink: %d bits / %d seconds = %.3g bps\n", $phone_uplink_total{ $phone }, $seconds, $phone_uplink_total{ $phone } / $seconds;
+  }
 }
