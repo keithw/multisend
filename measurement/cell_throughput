@@ -29,7 +29,7 @@ if ( scalar @ARGV > 0 and $ARGV[ 0 ] eq "config" ) {
   }
 
   print <<END;
-multigraph downlink_total
+multigraph 1downlink_total
 graph_vlabel bits per second
 graph_args --base 1000 --units=si
 graph_title Total downlink bits per second
@@ -39,7 +39,7 @@ down.label Downlink
 END
 
   print <<END;
-multigraph uplink_total
+multigraph 2uplink_total
 graph_vlabel bits per second
 graph_args --base 1000 --units=si
 graph_title Total uplink bits per second
@@ -49,7 +49,7 @@ up.label Uplink
 END
 
   print <<END;
-multigraph working_phones
+multigraph 3working_phones
 graph_vlabel Number of phones
 graph_args --base 1000 --units=si
 graph_scale no
@@ -78,9 +78,9 @@ END
 $sum_st->execute() or die $dbh->errstr;
 my ( $time, $down, $up ) = $sum_st->fetchrow_array;
 
-print qq{multigraph downlink_total\n};
+print qq{multigraph 1downlink_total\n};
 print qq{down.value $down\n};
-print qq{multigraph uplink_total\n};
+print qq{multigraph 2uplink_total\n};
 print qq{up.value $up\n};
 
 $separate_st->execute( $time ) or die $dbh->errstr;
@@ -94,5 +94,5 @@ while ( my ( $phone, $down, $up ) = $separate_st->fetchrow_array ) {
   print qq{up.value $up\n};
 }
 
-  print qq{multigraph working_phones\n};
+  print qq{multigraph 3working_phones\n};
   print qq{count.value $phonecount\n};
