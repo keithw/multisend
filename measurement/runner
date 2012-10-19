@@ -4,7 +4,7 @@ use strict;
 
 use DBI;
 
-my $dbh = DBI->connect( q{dbi:Pg:dbname=das}, q{}, q{}, {AutoCommit => 1} );
+my $dbh = DBI->connect( q{dbi:Pg:dbname=das}, q{}, q{}, {AutoCommit => 0} );
 
 if ( !defined $dbh ) {
   die "Could not open database.";
@@ -94,7 +94,7 @@ for my $time ( sort { $a <=> $b } keys %speed ) {
   }
 }
 
-if ( $seconds >= 1 ) {
+if ( $seconds >= 15 ) {
   printf "downlink total: %d bits / %d seconds = %.3f Mbps\n", $overall_downlink_total, $seconds, 1.e-6 * ($overall_downlink_total / $seconds);
   printf "uplink total: %d bits / %d seconds = %.3f Mbps\n", $overall_uplink_total, $seconds, 1.e-6 * ($overall_uplink_total / $seconds);
 
@@ -108,3 +108,5 @@ if ( $seconds >= 1 ) {
     printf "$phone uplink: %d bits / %d seconds = %.3f Mbps\n", $phone_uplink_total{ $phone }, $seconds, 1.e-6 * ($phone_uplink_total{ $phone } / $seconds);
   }
 }
+
+$dbh->commit or die $dbh->errstr;
