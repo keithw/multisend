@@ -29,10 +29,11 @@ Socket::Address get_nat_addr( const Socket & sender, const Socket::Address & des
       received = receiver.recv();
       break;
     } catch ( int x ) {
-      if ( x == EAGAIN || x == EWOULDBLOCK ) {
+      if ( x == EAGAIN || x == EWOULDBLOCK || x == EINVAL ) {
 	sleep( 1 );
       } else {
-	fprintf( stderr, "Exiting with errno = %d\n", errno );
+	fprintf( stderr, "x = %d, errno = %d\n", x, errno );
+	perror( "existing with" );
 	exit( 1 );
       }
     }
