@@ -30,11 +30,15 @@ for my $hostname ( keys %hosts ) {
 my %speed;
 
 for my $handle ( @handles ) {
+  my $line_no = 0;
   while ( my $line = <$handle> ) {
     if ( $line =~ m{^cell-} ) {
+      $line_no++;
       my ( $phone, $time, $downlink_bps, $uplink_bps ) = split /\s+/, $line;
-      $speed{ $time }{ $phone }{ down } = $downlink_bps;
-      $speed{ $time }{ $phone }{ up } = $uplink_bps;
+      if ( $line_no < 38 ) {
+	$speed{ $time }{ $phone }{ down } = $downlink_bps;
+	$speed{ $time }{ $phone }{ up } = $uplink_bps;
+      }
 #      print STDERR $line;
     }
   }
@@ -56,7 +60,7 @@ my %phone_downlink_total;
 my %phone_uplink_total;
 my $overall_downlink_total;
 my $overall_uplink_total;
-my $seconds = -2;
+my $seconds = -5;
 for my $time ( sort { $a <=> $b } keys %speed ) {
   my $phone_count = scalar keys %{ $speed{ $time } };
   if ( $phone_count == $max_phones ) {
