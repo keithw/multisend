@@ -63,15 +63,15 @@ END
 
   for my $phone ( @phones ) {
     print <<END;
-multigraph $phone_throughput
+multigraph ${phone}_throughput
 graph_vlabel bits up (-) / down (+) per second
 graph_args --base 1000 --units=si
 graph_title $phone available throughput
 graph_category DAS
 graph_info This graph measures the smoothed bits per second of phone $phone.
-$phone_down.label Uplink
-$phone_up.label Uplink
-$phone_up.negative $phone_down
+${phone}_down.label Uplink
+${phone}_up.label Uplink
+${phone}_up.negative ${phone}_down
 END
   }
   exit;
@@ -91,7 +91,7 @@ while ( my ( $phone, $down, $up ) = $separate_st->fetchrow_array ) {
   $phonecount++;
   $phone =~ s{-}{_}g;
 
-  print qq{multigraph $phone_throughput\n};
+  print qq{multigraph ${phone}_throughput\n};
   print qq{down.value $down\n};
   print qq{up.value $up\n};
 }
