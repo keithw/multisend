@@ -32,7 +32,6 @@ if ( scalar @ARGV > 0 and $ARGV[ 0 ] eq "config" ) {
 multigraph downlink_total
 graph_vlabel bits per second
 graph_args --base 1000 --units=si
-graph_scale no
 graph_title Total downlink bits per second
 graph_category DAS
 graph_info This graph measures the total smoothed bits per second in the downlink direction.
@@ -43,7 +42,6 @@ END
 multigraph uplink_total
 graph_vlabel bits per second
 graph_args --base 1000 --units=si
-graph_scale no
 graph_title Total uplink bits per second
 graph_category DAS
 graph_info This graph measures the total smoothed bits per second in the uplink direction.
