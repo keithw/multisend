@@ -62,12 +62,16 @@ END
   for my $phone ( @phones ) {
     print <<END;
 multigraph ${phone}_throughput
+graph_order down up
 graph_vlabel bits up (-) / down (+) per second
 graph_args --base 1000 --units=si
 graph_title $phone available throughput
 graph_category DAS
 graph_info This graph measures the smoothed bits per second of phone $phone.
 down.label Downlink
+down.graph no
+down.min 0
+up.min 0
 up.label Uplink
 up.negative down
 END
