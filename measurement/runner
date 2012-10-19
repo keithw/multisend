@@ -4,8 +4,11 @@ use strict;
 
 use DBI;
 
-my $dbh = DBI->connect( q{dbi:Pg:dbname=das}, q{}, q{}, {AutoCommit => 1} )
-  or die $dbh->errstr;
+my $dbh = DBI->connect( q{dbi:Pg:dbname=das}, q{}, q{}, {AutoCommit => 1} );
+
+if ( !defined $dbh ) {
+  die "Could not open database.";
+}
 
 my $raw_st = $dbh->prepare( q{INSERT INTO raw (phone, time, downlink_bps, uplink_bps, downlink_loss, uplink_loss) VALUES (?, ?, ?, ?, ?, ?)} )
   or die $dbh->errstr;
