@@ -1,0 +1,3 @@
+#!/bin/bash
+
+ip addr show dev $1 | grep 'inet ' | awk '{ print $2 }' | cut -d '/' -f 1
