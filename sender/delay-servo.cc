@@ -34,6 +34,10 @@ double DelayServo::loss_rate( void ) const
 uint64_t DelayServo::recv( void )
 {
   Socket::Packet incoming( _receiver.recv() );
+  if ( incoming.payload.size() != PACKET_SIZE ) {
+    return 0;
+  }
+
   Payload *contents = (Payload *) incoming.payload.data();
   contents->recv_timestamp = incoming.timestamp;
 
