@@ -50,10 +50,10 @@ END
 
   print <<END;
 multigraph 3working_phones
-graph_vlabel 3. Number of phones
+graph_vlabel Number of phones
 graph_args --base 1000 --units=si
 graph_scale no
-graph_title Number of phones with network connection
+graph_title 3. Number of phones with network connection
 graph_category DAS
 graph_info This graph measures the number of working cell phones.
 count.label Count
