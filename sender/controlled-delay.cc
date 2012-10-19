@@ -20,17 +20,17 @@ Socket::Address get_nat_addr( const Socket & sender, const Socket::Address & des
   }
   
   string to_send( buf, 10 );
+  Socket::Packet pack( dest, to_send );
 
-  sender.send( Socket::Packet( dest, to_send ) );
-  sender.send( Socket::Packet( dest, to_send ) );
-  sender.send( Socket::Packet( dest, to_send ) );
-  sender.send( Socket::Packet( dest, to_send ) );
-  sender.send( Socket::Packet( dest, to_send ) );
-  Socket::Packet received( UNKNOWN, "" );
+  sender.send( pack );
+  sender.send( pack );
+  sender.send( pack );
+  sender.send( pack );
+  sender.send( pack );
   
   for ( int tries = 0; tries < 20; tries++ ) {
     try {
-      received = receiver.recv();
+      Socket::Packet received( receiver.recv() );
       if ( received.payload == to_send ) {
 	return received.addr;
       }
@@ -81,13 +81,8 @@ int main( int argc, char** argv)
   /* Create and bind LTE socket */
   Socket lte_socket;
 
- #ifdef EMULATE
-  lte_socket.bind( Socket::Address( "127.0.0.1", 9001 ) );
-  lte_socket.bind_to_device( "lo" );
- #else 
   lte_socket.bind( Socket::Address( lte_ip , lte_port ) );
   lte_socket.bind_to_device( lte_device );
- #endif
 
   /* Figure out the NAT addresses of each of the three LTE sockets */
   Socket::Address target( get_nat_addr( lte_socket, ethernet_address, ethernet_socket ) );
