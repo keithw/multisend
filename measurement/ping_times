@@ -81,7 +81,7 @@ END
   print <<END;
 multigraph ping_losses
 graph_vlabel loss rate (%)
-graph_args --base 1000
+graph_args --base 1000 -l 0 -u 100 -r
 graph_scale no
 graph_title Ping packet loss rate per phone (%)
 graph_category DAS
