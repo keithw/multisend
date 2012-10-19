@@ -55,7 +55,7 @@ sub ping_on_interface {
   close PING;
 
   my $mean_rtt = stripped_mean( @pings );
-  my $connectivity = (scalar @pings) / 32.0;
+  my $connectivity = (scalar @pings) / 60.0;
   return ( $mean_rtt, 100 * (1.0 - $connectivity) );
 }
 
