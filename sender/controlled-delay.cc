@@ -135,16 +135,19 @@ int main( int argc, char** argv)
     timeout.tv_nsec = next_transmission_delay % 1000000000;
     ppoll( poll_fds, 2, &timeout, NULL );
 
+    int index = running_time / 1000000000;
+    assert( index < duration );
+
     if ( poll_fds[ 0 ].revents & POLLIN ) {
-      num_bits_down[ running_time / 1000000000 ] += downlink.recv();
+      num_bits_down[ index ] += downlink.recv();
     }
 
     if ( poll_fds[ 1 ].revents & POLLIN ) {
-      num_bits_up[ running_time / 1000000000 ] += uplink.recv();
+      num_bits_up[ index ] += uplink.recv();
     }
 
-    downlink_loss_rate[ running_time / 1000000000 ] = downlink.loss_rate();
-    uplink_loss_rate[ running_time / 1000000000 ] = uplink.loss_rate();
+    downlink_loss_rate[ index ] = downlink.loss_rate();
+    uplink_loss_rate[ index ] = uplink.loss_rate();
   }
 
   for (int i = 0; i < duration; i++) {
