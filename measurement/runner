@@ -2,6 +2,17 @@
 
 use strict;
 
+use DBI;
+
+my $dbh = DBI->connect( q{dbi:Pg:dbname=das}, q{}, q{}, {AutoCommit => 1} )
+  or die $dbh->errstr;
+
+my $raw_st = $dbh->prepare( q{INSERT INTO raw (phone, time, downlink_bps, uplink_bps, downlink_loss, uplink_loss) VALUES (?, ?, ?, ?, ?, ?)} )
+  or die $dbh->errstr;
+
+my $smoothed_st = $dbh->prepare( q{INSERT INTO smoothed (phone, time, num_seconds, downlink_bps, uplink_bps) VALUES (?, ?, ?, ?, ?)} )
+  or die $dbh->errstr;
+
 my %hosts = ( celltest1 => { ip => q{18.248.4.2},
 			     phones => [qw[91071403 6014736e 0a0844d8]] },
 	      celltest2 => { ip => q{18.248.4.3},
@@ -34,7 +45,9 @@ for my $handle ( @handles ) {
   while ( my $line = <$handle> ) {
     if ( $line =~ m{^cell-} ) {
       $line_no++;
-      my ( $phone, $time, $downlink_bps, $uplink_bps ) = split /\s+/, $line;
+      chomp $line;
+      my ( $phone, $time, $downlink_bps, $uplink_bps, $downlink_loss, $uplink_loss ) = split /\s+/, $line;
+      $raw_st->execute( $phone, $time, $downlink_bps, $uplink_bps, $downlink_loss, $uplink_loss ) or die $dbh->errstr;
       if ( $line_no < 38 ) {
 	$speed{ $time }{ $phone }{ down } = $downlink_bps;
 	$speed{ $time }{ $phone }{ up } = $uplink_bps;
@@ -61,11 +74,13 @@ my %phone_uplink_total;
 my $overall_downlink_total;
 my $overall_uplink_total;
 my $seconds = -5;
+my $last_time = 0;
 for my $time ( sort { $a <=> $b } keys %speed ) {
   my $phone_count = scalar keys %{ $speed{ $time } };
   if ( $phone_count == $max_phones ) {
     $seconds++;
     if ( $seconds >= 1 ) {
+      $last_time = $time;
       for my $phone ( keys %{ $speed{ $time } } ) {
 	$phone_downlink_total{ $phone } += $speed{ $time }{ $phone }{ down };
 	$phone_uplink_total{ $phone } += $speed{ $time }{ $phone }{ up };
@@ -76,12 +91,16 @@ for my $time ( sort { $a <=> $b } keys %speed ) {
   }
 }
 
-
 if ( $seconds >= 1 ) {
   printf "downlink total: %d bits / %d seconds = %.3f Mbps\n", $overall_downlink_total, $seconds, 1.e-6 * ($overall_downlink_total / $seconds);
   printf "uplink total: %d bits / %d seconds = %.3f Mbps\n", $overall_uplink_total, $seconds, 1.e-6 * ($overall_uplink_total / $seconds);
 
   for my $phone ( keys %phone_downlink_total ) {
+    $raw_st->execute( $phone, $last_time, $seconds,
+		      $phone_downlink_total{ $phone } / $seconds,
+		      $phone_uplink_total{ $phone } / $seconds )
+      or die $dbh->errstr;
+
     printf "$phone downlink: %d bits / %d seconds = %.3f Mbps\n", $phone_downlink_total{ $phone }, $seconds, 1.e-6 * ($phone_downlink_total{ $phone } / $seconds);
     printf "$phone uplink: %d bits / %d seconds = %.3f Mbps\n", $phone_uplink_total{ $phone }, $seconds, 1.e-6 * ($phone_uplink_total{ $phone } / $seconds);
   }
