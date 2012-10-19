@@ -62,7 +62,6 @@ END
   for my $phone ( @phones ) {
     print <<END;
 multigraph ${phone}_throughput
-graph_order down up
 graph_vlabel bits up (-) / down (+) per second
 graph_args --base 1000 --units=si
 graph_title $phone available throughput
@@ -72,6 +71,7 @@ down.label Downlink
 up.graph no
 down.min 0
 up.min 0
+up.label Throughput
 down.label Throughput
 down.negative up
 END
