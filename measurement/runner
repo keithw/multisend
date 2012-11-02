@@ -16,11 +16,11 @@ my $raw_st = $dbh->prepare( q{INSERT INTO raw (phone, time, downlink_bps, uplink
 my $smoothed_st = $dbh->prepare( q{INSERT INTO smoothed (phone, time, num_seconds, downlink_bps, uplink_bps) VALUES (?, ?, ?, ?, ?)} )
   or die $dbh->errstr;
 
-my %hosts = ( celltest1 => { ip => q{18.248.4.2},
+my %hosts = ( celltest1 => { ip => q{18.18.2.212},
 			     phones => [qw[91071403 6014736e 0a0844d8]] },
-	      celltest2 => { ip => q{18.248.4.3},
+	      celltest2 => { ip => q{18.18.2.159},
 			     phones => [qw[9b05f2ce f10f68e7 e819642a]] },
-	      celltest3 => { ip => q{18.238.2.50},
+	      celltest3 => { ip => q{18.18.2.175},
 			     phones => [qw[420733a4 9e13bef1 7e0b1626]] },
 	      celltest4 => { ip => q{18.18.2.87},
 			     phones => [qw[890d5903 351bc75b 3b16be3a]] } );
