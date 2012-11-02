@@ -20,7 +20,7 @@ void History::packet_received( const Payload & p )
   _outstanding.remove_if( [&] ( const Payload & x ) { return x.sequence_number == p.sequence_number; } );
 
   unsigned int new_size = _outstanding.size();
-  assert( _num_outstanding - new_size == 1 );
+  //  assert( _num_outstanding - new_size == 1 );
   _num_outstanding = new_size;
 
   const uint64_t purge_older = p.sent_timestamp - reorder_window;
