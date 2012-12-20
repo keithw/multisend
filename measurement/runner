@@ -2,19 +2,19 @@
 
 use strict;
 
-#use DBI;
+use DBI;
 
-#my $dbh = DBI->connect( q{dbi:Pg:dbname=das}, q{}, q{}, {AutoCommit => 0} );
+my $dbh = DBI->connect( q{dbi:Pg:dbname=das}, q{}, q{}, {AutoCommit => 0} );
 
-#if ( !defined $dbh ) {
-#  die "Could not open database.";
-#}
+if ( !defined $dbh ) {
+  die "Could not open database.";
+}
 
-#my $raw_st = $dbh->prepare( q{INSERT INTO raw (phone, time, downlink_bps, uplink_bps, downlink_loss, uplink_loss) VALUES (?, ?, ?, ?, ?, ?)} )
-#  or die $dbh->errstr;
+my $raw_st = $dbh->prepare( q{INSERT INTO raw (phone, time, downlink_bps, uplink_bps, downlink_loss, uplink_loss) VALUES (?, ?, ?, ?, ?, ?)} )
+  or die $dbh->errstr;
 
-#my $smoothed_st = $dbh->prepare( q{INSERT INTO smoothed (phone, time, num_seconds, downlink_bps, uplink_bps) VALUES (?, ?, ?, ?, ?)} )
-#  or die $dbh->errstr;
+my $smoothed_st = $dbh->prepare( q{INSERT INTO smoothed (phone, time, num_seconds, downlink_bps, uplink_bps) VALUES (?, ?, ?, ?, ?)} )
+  or die $dbh->errstr;
 
 my %hosts = ( celltest1 => { ip => q{18.18.2.212},
 			     phones => [qw[6014736e e819642a 9e13bef1]] } );
@@ -44,7 +44,7 @@ for my $handle ( @handles ) {
       $line_no++;
       chomp $line;
       my ( $phone, $time, $downlink_bps, $uplink_bps, $downlink_loss, $uplink_loss ) = split /\s+/, $line;
-#      $raw_st->execute( $phone, $time, $downlink_bps, $uplink_bps, $downlink_loss, $uplink_loss ) or die $dbh->errstr;
+      $raw_st->execute( $phone, $time, $downlink_bps, $uplink_bps, $downlink_loss, $uplink_loss ) or die $dbh->errstr;
       if ( $line_no < 38 ) {
 	$speed{ $time }{ $phone }{ down } = $downlink_bps;
 	$speed{ $time }{ $phone }{ up } = $uplink_bps;
@@ -88,7 +88,7 @@ for my $time ( sort { $a <=> $b } keys %speed ) {
   }
 }
 
-print "\n\n======= Results complete =======\n\n";
+printf "\n======= Test run complete at %s =======\n\n", (scalar localtime);
 
 printf "Got data from %d cell phones for %d seconds.\n\n", (scalar keys %phone_downlink_total), $seconds;
 
@@ -98,14 +98,16 @@ printf "==> UPLINK total: %d bits / %d seconds = %.3f Mbps\n", $overall_uplink_t
 print "\n Individual phone reports: \n";
 
 for my $phone ( keys %phone_downlink_total ) {
-#    $smoothed_st->execute( $phone, $last_time, $seconds,
-#			   $phone_downlink_total{ $phone } / $seconds,
-#			   $phone_uplink_total{ $phone } / $seconds )
-#      or die $dbh->errstr;
+    $smoothed_st->execute( $phone, $last_time, $seconds,
+			   $phone_downlink_total{ $phone } / $seconds,
+			   $phone_uplink_total{ $phone } / $seconds )
+      or die $dbh->errstr;
 
     printf "  $phone downlink: %d bits / %d seconds = %.3f Mbps\n", $phone_downlink_total{ $phone }, $seconds, 1.e-6 * ($phone_downlink_total{ $phone } / $seconds);
     printf "  $phone uplink: %d bits / %d seconds = %.3f Mbps\n", $phone_uplink_total{ $phone }, $seconds, 1.e-6 * ($phone_uplink_total{ $phone } / $seconds);
     print "\n";
 }
 
-#$dbh->commit or die $dbh->errstr;
+print "Saving data to database... ";
+$dbh->commit or die $dbh->errstr;
+print "done.\n";
