@@ -16,7 +16,7 @@ my $raw_st = $dbh->prepare( q{INSERT INTO raw (phone, time, downlink_bps, uplink
 my $smoothed_st = $dbh->prepare( q{INSERT INTO smoothed (phone, time, num_seconds, downlink_bps, uplink_bps) VALUES (?, ?, ?, ?, ?)} )
   or die $dbh->errstr;
 
-my %hosts = ( celltest1 => { ip => q{18.18.2.212},
+my %hosts = ( celltest2 => { ip => q{18.18.2.159},
 			     phones => [qw[91071403 420733a4 0a0844d8]] } );
 
 my @handles;
