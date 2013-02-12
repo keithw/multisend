@@ -62,8 +62,10 @@ private:
 
   uint32_t _packets_added;
   uint32_t _packets_dropped;
+  std::string _file_name;
 
   void tick( void );
+
 
 public:
   DelayQueue( const string & s_name, const uint64_t s_ms_delay, const char *filename, const uint64_t base_timestamp, const float loss_rate );
@@ -71,6 +73,7 @@ public:
   int wait_time( void );
   std::vector< string > read( void );
   void write( const string & packet );
+  void schedule_from_file( const uint64_t base_timestamp );
 };
 
 DelayQueue::DelayQueue( const string & s_name, const uint64_t s_ms_delay, const char *filename, const uint64_t base_timestamp, const float loss_rate )
@@ -88,13 +91,27 @@ DelayQueue::DelayQueue( const string & s_name, const uint64_t s_ms_delay, const 
     _bin_sec( base_timestamp / 1000 ),
     _base_timestamp( base_timestamp ),
     _packets_added ( 0 ),
-    _packets_dropped( 0 )
+    _packets_dropped( 0 ),
+    _file_name( filename )
 {
-  FILE *f = fopen( filename, "r" );
+  /* Read schedule from file */
+  schedule_from_file( base_timestamp );
+
+  /* Initialize seed for probabilistic loss model */
+  srand(0);
+  fprintf( stderr, "Initialized %s queue with %d services.\n", filename, (int)_schedule.size() );
+}
+
+void DelayQueue::schedule_from_file( const uint64_t base_timestamp ) 
+{
+  FILE *f = fopen( _file_name.c_str(), "r" );
   if ( f == NULL ) {
     perror( "fopen" );
     exit( 1 );
   }
+
+  /* Only populate when the schedule is empty */
+  assert( _schedule.empty() );
 
   while ( 1 ) {
     uint64_t ms;
@@ -111,8 +128,7 @@ DelayQueue::DelayQueue( const string & s_name, const uint64_t s_ms_delay, const 
 
     _schedule.push( ms );
   }
-  srand(0);
-  fprintf( stderr, "Initialized %s queue with %d services.\n", filename, (int)_schedule.size() );
+
 }
 
 int DelayQueue::wait_time( void )
@@ -168,6 +184,12 @@ void DelayQueue::write( const string & packet )
 void DelayQueue::tick( void )
 {
   uint64_t now = timestamp();
+
+  /* If the schedule is empty, repopulate it */
+  if ( _schedule.empty() ) {
+    fprintf( stderr, "Recycling trace @ time %lu \n", now );
+    schedule_from_file( now );
+  }
 
   /* move packets from end of delay to PDP */
   while ( (!_delay.empty())
