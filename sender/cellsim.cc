@@ -187,7 +187,6 @@ void DelayQueue::tick( void )
 
   /* If the schedule is empty, repopulate it */
   if ( _schedule.empty() ) {
-    fprintf( stderr, "Recycling trace @ time %lu \n", now );
     schedule_from_file( now );
   }
 
