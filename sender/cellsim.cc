@@ -128,7 +128,7 @@ void DelayQueue::schedule_from_file( const uint64_t base_timestamp )
 
     _schedule.push( ms );
   }
-
+  fclose( f );
 }
 
 int DelayQueue::wait_time( void )
