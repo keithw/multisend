@@ -278,15 +278,18 @@ int main( int argc, char *argv[] )
   const char *up_filename, *down_filename, *client_mac;
   float loss_rate;
 
-  assert( argc == 5 );
+  assert( argc == 7 );
 
   up_filename = argv[ 1 ];
   down_filename = argv[ 2 ];
   client_mac = argv[ 3 ];
   loss_rate = atof(argv[ 4 ]);
 
-  PacketSocket internet_side( "eth0", string(), string( client_mac ) );
-  PacketSocket client_side( "eth1", string( client_mac ), string() );
+  auto internet_side_interface = argv[ 5 ];
+  auto client_side_interface   = argv[ 6 ];
+
+  PacketSocket internet_side( internet_side_interface, string(), string( client_mac ) );
+  PacketSocket client_side( client_side_interface, string( client_mac ), string() );
 
   /* Read in schedule */
   uint64_t now = timestamp();
