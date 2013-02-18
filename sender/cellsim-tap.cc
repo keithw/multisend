@@ -311,8 +311,6 @@ int main( int argc, char *argv[] )
     if ( sel.read( client_side.fd() ) ) {
       std::vector< string > filtered_packets( client_side.recv_raw() );
       for ( auto it = filtered_packets.begin(); it != filtered_packets.end(); it++ ) {
-
-        printf("Received something from client, forwarding onward \n ");
 	uplink.write( *it );
       }
     }
@@ -320,7 +318,6 @@ int main( int argc, char *argv[] )
     if ( sel.read( internet_side.fd() ) ) {
       std::vector< string > filtered_packets( internet_side.recv_raw() );
       for ( auto it = filtered_packets.begin(); it != filtered_packets.end(); it++ ) {
-        printf("Received something from the Internet, forwarind inward \n");
 	downlink.write( *it );
       }
     }
