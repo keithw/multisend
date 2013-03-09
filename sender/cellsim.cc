@@ -237,12 +237,12 @@ void DelayQueue::tick( void )
 
       /* will this be an underflow? */
       if ( _pdp.empty() ) {
-	_total_bytes += bytes_to_play_with;
-	bytes_to_play_with = 0;
 	/* underflow */
 	if ( _printing ) {
-	  printf( "%s %lu underflow\n", _name.c_str(), convert_timestamp( pdo_time ) );
+	  printf( "%s %lu underflow %d\n", _name.c_str(), convert_timestamp( pdo_time ), bytes_to_play_with );
 	}
+	_total_bytes += bytes_to_play_with;
+	bytes_to_play_with = 0;
       } else {
 	/* dequeue whole and/or partial packet */
 	DelayedPacket packet = _pdp.front();
