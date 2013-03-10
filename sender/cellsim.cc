@@ -216,7 +216,7 @@ void DelayQueue::tick( void )
 	_used_bytes += _limbo.front().packet.contents.size();
 
 	if ( _printing ) {
-	  printf( "%s %lu delivery %d %lu leftover\n", _name.c_str(), convert_timestamp( pdo_time ), int(now - _limbo.front().packet.entry_time), _limbo.front().packet.contents.size() );
+	  printf( "%s %lu delivery %d %lu leftover\n", _name.c_str(), convert_timestamp( pdo_time ), int(pdo_time - _limbo.front().packet.entry_time), _limbo.front().packet.contents.size() );
 	}
 
 	_delivered.push_back( _limbo.front().packet.contents );
@@ -253,7 +253,7 @@ void DelayQueue::tick( void )
 	  _used_bytes += packet.contents.size();
 
 	  if ( _printing ) {
-	    printf( "%s %lu delivery %d %lu\n", _name.c_str(), convert_timestamp( pdo_time ), int(now - packet.entry_time), packet.contents.size() );
+	    printf( "%s %lu delivery %d %lu\n", _name.c_str(), convert_timestamp( pdo_time ), int(pdo_time - packet.entry_time), packet.contents.size() );
 	  }
 
 	  _delivered.push_back( packet.contents );
