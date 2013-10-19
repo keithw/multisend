@@ -188,9 +188,9 @@ void DelayQueue::tick( void )
 {
   uint64_t now = timestamp();
 
-  /* If the schedule is empty, end playback */
+  /* If the schedule is empty, repopulate it */
   if ( _schedule.empty() ) {
-    exit( 0 );
+    schedule_from_file( now );
   }
 
   /* move packets from end of delay to PDP */
