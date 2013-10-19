@@ -86,8 +86,10 @@ vector< string > PacketSocket::recv_raw( void )
     exit( 1 );
   }
 
-  if ( source_address_len != sizeof( source_address ) ) {
-    perror( "recvfrom (unexpected address length" );
+  if ( source_address_len != 18 ) {
+    fprintf( stderr, "address length = %d\n",
+	     source_address_len );
+    perror( "recvfrom (unexpected address length)" );
     exit( 1 );
   }
 
