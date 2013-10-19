@@ -28,12 +28,8 @@ int PacketSocket::get_index( const std::string & name ) const
   return ifr.ifr_ifindex;
 }
 
-PacketSocket::PacketSocket( const std::string & s_interface,
-			    const std::string & s_from_filter,
-			    const std::string & s_to_filter )
-  : sock( socket( AF_PACKET, SOCK_RAW, htons( ETH_P_ALL ) ) ),
-    _from_filter( MACAddress::parse_human( s_from_filter ) ),
-    _to_filter( MACAddress::parse_human( s_to_filter ) )
+PacketSocket::PacketSocket( const std::string & s_interface )
+  : sock( socket( AF_PACKET, SOCK_RAW, htons( ETH_P_ALL ) ) )
 {
   /* create packet socket */
 
@@ -94,20 +90,6 @@ vector< string > PacketSocket::recv_raw( void )
     perror( "recvfrom (unexpected address length" );
     exit( 1 );
   }
-
-  /*
-  const string packet( buf, bytes_read );
-
-  assert( packet.size() > 12 );
-
-  const MACAddress destination_address( packet.substr( 0, 6 ) );
-  const MACAddress source_address( packet.substr( 6, 6 ) );
-
-  if (  _to_filter.matches( destination_address )
-	&& _from_filter.matches( source_address ) ) {
-    ret.push_back( packet );
-  }
-  */
 
   if ( source_address.sll_pkttype != PACKET_OUTGOING ) {
     ret.emplace_back( buf, bytes_read );

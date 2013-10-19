@@ -295,8 +295,8 @@ int main( int argc, char *argv[] )
   const string internet_side_interface = argv[ 5 ];
   const string client_side_interface   = argv[ 6 ];
 
-  PacketSocket internet_side( internet_side_interface, "", client_mac );
-  PacketSocket client_side( client_side_interface, client_mac, "" );
+  PacketSocket internet_side( internet_side_interface );
+  PacketSocket client_side( client_side_interface );
 
   /* Read in schedule */
   uint64_t now = timestamp();
