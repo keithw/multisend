@@ -41,13 +41,13 @@ private:
 
   const string _name;
 
-  std::queue< DelayedPacket > _delay;
-  std::queue< DelayedPacket > _pdp;
-  std::queue< PartialPacket > _limbo;
+  queue< DelayedPacket > _delay;
+  queue< DelayedPacket > _pdp;
+  queue< PartialPacket > _limbo;
 
-  std::queue< uint64_t > _schedule;
+  queue< uint64_t > _schedule;
 
-  std::vector< string > _delivered;
+  vector< string > _delivered;
 
   const uint64_t _ms_delay;
   const float _loss_rate;
@@ -62,7 +62,7 @@ private:
 
   uint32_t _packets_added;
   uint32_t _packets_dropped;
-  std::string _file_name;
+  string _file_name;
 
   bool _printing;
 
@@ -73,7 +73,7 @@ public:
   DelayQueue( const string & s_name, const uint64_t s_ms_delay, const char *filename, const uint64_t base_timestamp, const float loss_rate, bool s_printing = false );
 
   int wait_time( void );
-  std::vector< string > read( void );
+  vector< string > read( void );
   void write( const string & packet );
   void schedule_from_file( const uint64_t base_timestamp );
 };
@@ -154,14 +154,14 @@ int DelayQueue::wait_time( void )
     assert( schedule_wait >= 0 );
   }
 
-  return std::min( delay_wait, schedule_wait );
+  return min( delay_wait, schedule_wait );
 }
 
-std::vector< string > DelayQueue::read( void )
+vector< string > DelayQueue::read( void )
 {
   tick();
 
-  std::vector< string > ret( _delivered );
+  vector< string > ret( _delivered );
   _delivered.clear();
 
   return ret;
@@ -311,7 +311,7 @@ int main( int argc, char *argv[] )
   sel.add_fd( client_side.fd() );
 
   while ( 1 ) {
-    int wait_time = std::min( uplink.wait_time(), downlink.wait_time() );
+    int wait_time = min( uplink.wait_time(), downlink.wait_time() );
     int active_fds = sel.select( wait_time );
     if ( active_fds < 0 ) {
       perror( "select" );
@@ -319,25 +319,25 @@ int main( int argc, char *argv[] )
     }
 
     if ( sel.read( client_side.fd() ) ) {
-      std::vector< string > filtered_packets( client_side.recv_raw() );
+      vector< string > filtered_packets( client_side.recv_raw() );
       for ( auto it = filtered_packets.begin(); it != filtered_packets.end(); it++ ) {
 	uplink.write( *it );
       }
     }
 
     if ( sel.read( internet_side.fd() ) ) {
-      std::vector< string > filtered_packets( internet_side.recv_raw() );
+      vector< string > filtered_packets( internet_side.recv_raw() );
       for ( auto it = filtered_packets.begin(); it != filtered_packets.end(); it++ ) {
 	downlink.write( *it );
       }
     }
 
-    std::vector< string > uplink_packets( uplink.read() );
+    vector< string > uplink_packets( uplink.read() );
     for ( auto it = uplink_packets.begin(); it != uplink_packets.end(); it++ ) {
       internet_side.send_raw( *it );
     }
 
-    std::vector< string > downlink_packets( downlink.read() );
+    vector< string > downlink_packets( downlink.read() );
     for ( auto it = downlink_packets.begin(); it != downlink_packets.end(); it++ ) {
       client_side.send_raw( *it );
     }
