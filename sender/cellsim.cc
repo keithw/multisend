@@ -70,7 +70,7 @@ private:
 
 
 public:
-  DelayQueue( const string & s_name, const uint64_t s_ms_delay, const char *filename, const uint64_t base_timestamp, const float loss_rate, bool s_printing = false );
+  DelayQueue( const string & s_name, const uint64_t s_ms_delay, const string filename, const uint64_t base_timestamp, const float loss_rate, bool s_printing = false );
 
   int wait_time( void );
   vector< string > read( void );
@@ -78,7 +78,7 @@ public:
   void schedule_from_file( const uint64_t base_timestamp );
 };
 
-DelayQueue::DelayQueue( const string & s_name, const uint64_t s_ms_delay, const char *filename, const uint64_t base_timestamp, const float loss_rate, bool s_printing )
+DelayQueue::DelayQueue( const string & s_name, const uint64_t s_ms_delay, const string filename, const uint64_t base_timestamp, const float loss_rate, bool s_printing )
   : _name( s_name ),
     _delay(),
     _pdp(),
@@ -102,7 +102,7 @@ DelayQueue::DelayQueue( const string & s_name, const uint64_t s_ms_delay, const 
 
   /* Initialize seed for probabilistic loss model */
   srand(0);
-  fprintf( stderr, "Initialized %s queue with %d services.\n", filename, (int)_schedule.size() );
+  fprintf( stderr, "Initialized %s queue with %d services.\n", filename.c_str(), (int)_schedule.size() );
 }
 
 void DelayQueue::schedule_from_file( const uint64_t base_timestamp ) 
@@ -285,21 +285,18 @@ void DelayQueue::tick( void )
 
 int main( int argc, char *argv[] )
 {
-  const char *up_filename, *down_filename, *client_mac;
-  float loss_rate;
-
   assert( argc == 7 );
 
-  up_filename = argv[ 1 ];
-  down_filename = argv[ 2 ];
-  client_mac = argv[ 3 ];
-  loss_rate = atof(argv[ 4 ]);
+  const string up_filename = argv[ 1 ];
+  const string down_filename = argv[ 2 ];
+  const string client_mac = argv[ 3 ];
+  const double loss_rate = atof( argv[ 4 ] );
 
-  auto internet_side_interface = argv[ 5 ];
-  auto client_side_interface   = argv[ 6 ];
+  const string internet_side_interface = argv[ 5 ];
+  const string client_side_interface   = argv[ 6 ];
 
-  PacketSocket internet_side( internet_side_interface, string(), string( client_mac ) );
-  PacketSocket client_side( client_side_interface, string( client_mac ), string() );
+  PacketSocket internet_side( internet_side_interface, "", client_mac );
+  PacketSocket client_side( client_side_interface, client_mac, "" );
 
   /* Read in schedule */
   uint64_t now = timestamp();
@@ -319,27 +316,23 @@ int main( int argc, char *argv[] )
     }
 
     if ( sel.read( client_side.fd() ) ) {
-      vector< string > filtered_packets( client_side.recv_raw() );
-      for ( auto it = filtered_packets.begin(); it != filtered_packets.end(); it++ ) {
-	uplink.write( *it );
+      for ( const auto & it : client_side.recv_raw() ) {
+	uplink.write( it );
       }
     }
 
     if ( sel.read( internet_side.fd() ) ) {
-      vector< string > filtered_packets( internet_side.recv_raw() );
-      for ( auto it = filtered_packets.begin(); it != filtered_packets.end(); it++ ) {
-	downlink.write( *it );
+      for ( const auto & it : internet_side.recv_raw() ) {
+	downlink.write( it );
       }
     }
 
-    vector< string > uplink_packets( uplink.read() );
-    for ( auto it = uplink_packets.begin(); it != uplink_packets.end(); it++ ) {
-      internet_side.send_raw( *it );
+    for ( const auto & it : uplink.read() ) {
+      internet_side.send_raw( it );
     }
 
-    vector< string > downlink_packets( downlink.read() );
-    for ( auto it = downlink_packets.begin(); it != downlink_packets.end(); it++ ) {
-      client_side.send_raw( *it );
+    for ( const auto & it : downlink.read() ) {
+      client_side.send_raw( it );
     }
   }
 }
