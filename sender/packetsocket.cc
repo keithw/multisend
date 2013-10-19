@@ -75,7 +75,12 @@ vector< string > PacketSocket::recv_raw( void )
 
   char buf[ BUFFER_SIZE ];
 
-  ssize_t bytes_read = recvfrom( sock, buf, BUFFER_SIZE, MSG_TRUNC, nullptr, nullptr );
+  sockaddr_ll source_address;
+  socklen_t source_address_len = sizeof( source_address );
+
+  ssize_t bytes_read = recvfrom( sock, buf, BUFFER_SIZE, MSG_TRUNC,
+				 reinterpret_cast<sockaddr *>( &source_address ),
+				 &source_address_len );
   if ( bytes_read < 0 ) {
     perror( "recvfrom" );
     exit( 1 );
@@ -85,6 +90,12 @@ vector< string > PacketSocket::recv_raw( void )
     exit( 1 );
   }
 
+  if ( source_address_len != sizeof( source_address ) ) {
+    perror( "recvfrom (unexpected address length" );
+    exit( 1 );
+  }
+
+  /*
   const string packet( buf, bytes_read );
 
   assert( packet.size() > 12 );
@@ -95,6 +106,11 @@ vector< string > PacketSocket::recv_raw( void )
   if (  _to_filter.matches( destination_address )
 	&& _from_filter.matches( source_address ) ) {
     ret.push_back( packet );
+  }
+  */
+
+  if ( source_address.sll_pkttype != PACKET_OUTGOING ) {
+    ret.emplace_back( buf, bytes_read );
   }
 
   return ret;
