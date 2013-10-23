@@ -2,6 +2,8 @@
 #include <vector>
 #include <poll.h>
 #include <assert.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include "socket.hh"
 #include "hist.hh"
