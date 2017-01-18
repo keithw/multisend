@@ -39,6 +39,7 @@ private:
 
   uint64_t convert_timestamp( const uint64_t absolute_timestamp ) const { return absolute_timestamp - _base_timestamp; }
 
+  FILE * _output;
   const string _name;
 
   queue< DelayedPacket > _delay;
@@ -68,9 +69,12 @@ private:
 
   void tick( void );
 
-
+  /* forbid copies */
+  DelayQueue( const DelayQueue & other ) = delete;
+  DelayQueue & operator=( const DelayQueue & other ) = delete;
+  
 public:
-  DelayQueue( const string & s_name, const uint64_t s_ms_delay, const string filename, const uint64_t base_timestamp, const float loss_rate, bool s_printing = false );
+  DelayQueue( FILE * s_output, const string & s_name, const uint64_t s_ms_delay, const string filename, const uint64_t base_timestamp, const float loss_rate, bool s_printing = false );
 
   int wait_time( void );
   vector< string > read( void );
@@ -78,8 +82,9 @@ public:
   void schedule_from_file( const uint64_t base_timestamp );
 };
 
-DelayQueue::DelayQueue( const string & s_name, const uint64_t s_ms_delay, const string filename, const uint64_t base_timestamp, const float loss_rate, bool s_printing )
-  : _name( s_name ),
+DelayQueue::DelayQueue( FILE * s_output, const string & s_name, const uint64_t s_ms_delay, const string filename, const uint64_t base_timestamp, const float loss_rate, bool s_printing )
+  : _output( s_output ),
+    _name( s_name ),
     _delay(),
     _pdp(),
     _limbo(),
@@ -180,6 +185,11 @@ void DelayQueue::write( const string & packet )
     uint64_t now( timestamp() );
     DelayedPacket p( now, now + _ms_delay, packet );
     _delay.push( p );
+
+    fprintf( _output, "%lu + %lu\n",
+	     convert_timestamp( now ),
+	     packet.size() );
+    
     _queued_bytes=_queued_bytes+packet.size();
   }
 }
@@ -206,6 +216,9 @@ void DelayQueue::tick( void )
     /* grab a PDO */
     const uint64_t pdo_time = _schedule.front();
     _schedule.pop();
+    /* delivery opportunity */
+    fprintf( _output, "%lu # %d\n", convert_timestamp( pdo_time ), SERVICE_PACKET_SIZE );
+
     int bytes_to_play_with = SERVICE_PACKET_SIZE;
 
     /* execute limbo queue first */
@@ -215,9 +228,16 @@ void DelayQueue::tick( void )
 	_total_bytes += _limbo.front().packet.contents.size();
 	_used_bytes += _limbo.front().packet.contents.size();
 
+	/*
 	if ( _printing ) {
 	  printf( "%s %lu delivery %d %lu leftover\n", _name.c_str(), convert_timestamp( pdo_time ), int(pdo_time - _limbo.front().packet.entry_time), _limbo.front().packet.contents.size() );
 	}
+	*/
+	/* new-style output (mahimahi-style) */
+	fprintf( _output, "%lu - %lu %d\n",
+		 convert_timestamp( pdo_time ),
+		 _limbo.front().packet.contents.size(),
+		 int(pdo_time - _limbo.front().packet.entry_time) );
 
 	_delivered.push_back( _limbo.front().packet.contents );
 	bytes_to_play_with -= (_limbo.front().packet.contents.size() - _limbo.front().bytes_earned);
@@ -238,9 +258,11 @@ void DelayQueue::tick( void )
       /* will this be an underflow? */
       if ( _pdp.empty() ) {
 	/* underflow */
+	/*
 	if ( _printing ) {
 	  printf( "%s %lu underflow %d\n", _name.c_str(), convert_timestamp( pdo_time ), bytes_to_play_with );
 	}
+	*/
 	_total_bytes += bytes_to_play_with;
 	bytes_to_play_with = 0;
       } else {
@@ -252,10 +274,18 @@ void DelayQueue::tick( void )
 	  _total_bytes += packet.contents.size();
 	  _used_bytes += packet.contents.size();
 
+	  /*
 	  if ( _printing ) {
 	    printf( "%s %lu delivery %d %lu\n", _name.c_str(), convert_timestamp( pdo_time ), int(pdo_time - packet.entry_time), packet.contents.size() );
 	  }
+	  */
 
+	  /* new-style output (mahimahi-style) */
+	  fprintf( _output, "%lu - %lu %d\n",
+		   convert_timestamp( pdo_time ),
+		   packet.contents.size(),
+		   int(pdo_time - packet.entry_time) );
+	  
 	  _delivered.push_back( packet.contents );
 	  bytes_to_play_with -= packet.contents.size();
 	} else {
@@ -299,8 +329,8 @@ int main( int argc, char *argv[] )
 
   /* Read in schedule */
   uint64_t now = timestamp();
-  DelayQueue uplink( "uplink", 20, up_filename, now , loss_rate );
-  DelayQueue downlink( "downlink", 20, down_filename, now , loss_rate, true );
+  DelayQueue uplink( stdout, "uplink", 20, up_filename, now , loss_rate );
+  DelayQueue downlink( stderr, "downlink", 20, down_filename, now , loss_rate, true );
 
   Select &sel = Select::get_instance();
   sel.add_fd( internet_side.fd() );
