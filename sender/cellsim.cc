@@ -102,7 +102,7 @@ DelayQueue::DelayQueue( const string & s_name, const uint64_t s_ms_delay, const 
 
   /* Initialize seed for probabilistic loss model */
   srand(0);
-  fprintf( stderr, "Initialized %s queue with %d services.\n", filename.c_str(), (int)_schedule.size() );
+  fprintf( stderr, "# Initialized %s queue with %d services.\n", filename.c_str(), (int)_schedule.size() );
 }
 
 void DelayQueue::schedule_from_file( const uint64_t base_timestamp ) 
@@ -173,7 +173,7 @@ void DelayQueue::write( const string & packet )
   _packets_added++;
   if (r < _loss_rate) {
    _packets_dropped++;
-   fprintf(stderr, "%s , Stochastic drop of packet, _packets_added so far %d , _packets_dropped %d , drop rate %f \n",
+   fprintf(stderr, "# %s , Stochastic drop of packet, _packets_added so far %d , _packets_dropped %d , drop rate %f \n",
                   _name.c_str(), _packets_added,_packets_dropped , (float)_packets_dropped/(float) _packets_added );
   }
   else {
@@ -275,7 +275,7 @@ void DelayQueue::tick( void )
   }
 
   while ( now / 1000 > _bin_sec ) {
-    fprintf( stderr, "%s %ld %ld / %ld = %.1f %% %ld \n", _name.c_str(), _bin_sec - (_base_timestamp / 1000), _used_bytes, _total_bytes, 100.0 * _used_bytes / (double) _total_bytes , _queued_bytes );
+    //    fprintf( stderr, "%s %ld %ld / %ld = %.1f %% %ld \n", _name.c_str(), _bin_sec - (_base_timestamp / 1000), _used_bytes, _total_bytes, 100.0 * _used_bytes / (double) _total_bytes , _queued_bytes );
     _total_bytes = 0;
     _used_bytes = 0;
     _queued_bytes = 0;
