@@ -285,15 +285,14 @@ void DelayQueue::tick( void )
 
 int main( int argc, char *argv[] )
 {
-  assert( argc == 7 );
+  assert( argc == 6 );
 
   const string up_filename = argv[ 1 ];
   const string down_filename = argv[ 2 ];
-  const string client_mac = argv[ 3 ];
-  const double loss_rate = atof( argv[ 4 ] );
+  const double loss_rate = atof( argv[ 3 ] );
 
-  const string internet_side_interface = argv[ 5 ];
-  const string client_side_interface   = argv[ 6 ];
+  const string internet_side_interface = argv[ 4 ];
+  const string client_side_interface   = argv[ 5 ];
 
   PacketSocket internet_side( internet_side_interface );
   PacketSocket client_side( client_side_interface );
