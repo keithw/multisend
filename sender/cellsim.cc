@@ -37,7 +37,7 @@ private:
 
   static const int SERVICE_PACKET_SIZE = 1514;
 
-  uint64_t convert_timestamp( const uint64_t absolute_timestamp ) const { return absolute_timestamp - _base_timestamp; }
+  uint64_t convert_timestamp( const uint64_t absolute_timestamp ) const { return absolute_timestamp; }
 
   FILE * _output;
   const string _name;
@@ -107,7 +107,9 @@ DelayQueue::DelayQueue( FILE * s_output, const string & s_name, const uint64_t s
 
   /* Initialize seed for probabilistic loss model */
   srand(0);
-  fprintf( stderr, "# Initialized %s queue with %d services.\n", filename.c_str(), (int)_schedule.size() );
+  fprintf( _output, "# Initialized %s queue with %d services.\n", filename.c_str(), (int)_schedule.size() );
+  fprintf( _output, "# Direction: %s\n", _name.c_str() );
+  fprintf( _output, "# base timestamp: %lu\n", base_timestamp );
 }
 
 void DelayQueue::schedule_from_file( const uint64_t base_timestamp ) 

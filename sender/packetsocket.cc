@@ -23,7 +23,7 @@ int PacketSocket::get_index( const std::string & name ) const
     exit( 1 );
   }
 
-  fprintf( stderr, "Interface %s has index %d\n", name.c_str(), ifr.ifr_ifindex );
+  fprintf( stderr, "# Interface %s has index %d\n", name.c_str(), ifr.ifr_ifindex );
   
   return ifr.ifr_ifindex;
 }
