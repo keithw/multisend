@@ -76,6 +76,8 @@ private:
 
   bool _printing;
 
+  static const int queue_limit_in_packets = 256;
+
   void tick( void );
 
   /* forbid copies */
@@ -194,6 +196,15 @@ void DelayQueue::write( const string & packet )
   }
   else {
     uint64_t now( timestamp() );
+
+    if ( _delay.size() >= queue_limit_in_packets ) {
+      fprintf( _output, "# %lu + %lu (dropped)\n",
+	       convert_timestamp( now ),
+	       packet.size() );
+
+      return; /* drop the packet */
+    }
+
     DelayedPacket p( now, now + _ms_delay, packet );
     _delay.push( p );
 
