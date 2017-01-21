@@ -5,12 +5,21 @@
 #include <stdio.h>
 #include <queue>
 #include <limits.h>
+#include <signal.h>
 
 #include "select.h"
 #include "timestamp.h"
 #include "packetsocket.hh"
 
 using namespace std;
+
+bool end_loop = false;
+void sigfunc(int signum)
+{
+    signum += 0;
+    end_loop = true;
+}
+
 
 class DelayQueue
 {
@@ -317,7 +326,11 @@ void DelayQueue::tick( void )
 
 int main( int argc, char *argv[] )
 {
-  assert( argc == 6 );
+  assert( argc >= 6 );
+
+  signal(SIGINT, sigfunc);
+  signal(SIGTERM, sigfunc);
+  signal(SIGHUP, sigfunc);
 
   const string up_filename = argv[ 1 ];
   const string down_filename = argv[ 2 ];
@@ -328,17 +341,22 @@ int main( int argc, char *argv[] )
 
   PacketSocket internet_side( internet_side_interface );
   PacketSocket client_side( client_side_interface );
-
+  FILE* up_output = stdout, *down_output = stderr;
+  if (argc >= 7)
+    up_output = fopen(argv[6], "w");
+  
+  if (argc >= 8)
+    down_output = fopen(argv[7], "w");
   /* Read in schedule */
   uint64_t now = timestamp();
-  DelayQueue uplink( stdout, "uplink", 20, up_filename, now , loss_rate );
-  DelayQueue downlink( stderr, "downlink", 20, down_filename, now , loss_rate, true );
+  DelayQueue uplink( up_output, "uplink", 20, up_filename, now , loss_rate );
+  DelayQueue downlink( down_output, "downlink", 20, down_filename, now , loss_rate, true );
 
   Select &sel = Select::get_instance();
   sel.add_fd( internet_side.fd() );
   sel.add_fd( client_side.fd() );
 
-  while ( 1 ) {
+  while ( !end_loop ) {
     int wait_time = min( uplink.wait_time(), downlink.wait_time() );
     int active_fds = sel.select( wait_time );
     if ( active_fds < 0 ) {
@@ -366,4 +384,9 @@ int main( int argc, char *argv[] )
       client_side.send_raw( it );
     }
   }
+
+  fclose(up_output);
+  fclose(down_output);
+  exit(0);
+
 }
