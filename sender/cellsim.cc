@@ -76,7 +76,7 @@ private:
 
   bool _printing;
 
-  static const int queue_limit_in_packets = 256;
+  static const int queue_limit_in_packets = 1024;
 
   void tick( void );
 
