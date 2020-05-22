@@ -37,5 +37,9 @@
 cellsim
 saturatr
 saturatr-m
-
-# End of https://www.gitignore.io/api/c++
+buffer-setpoint
+cellsim-tap
+controlled-delay
+depend
+send1way
+# End of http-://www.gitignore.io/api/c++
