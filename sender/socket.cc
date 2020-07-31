@@ -141,6 +141,6 @@ uint64_t Socket::timestamp( void )
     exit( 1 );
   }
 
-  uint64_t ret = ts.tv_sec * 1000000000 + ts.tv_nsec;
+  uint64_t ret = ts.tv_sec * (uint64_t) 1000000000 + ts.tv_nsec;
   return ret;
 }

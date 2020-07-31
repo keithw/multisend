@@ -4,6 +4,7 @@
 #include "socket.hh"
 #include "payload.hh"
 #include "acker.hh"
+#include <inttypes.h>
 
 const int MTU = 1500 - 28; // MTU - (sizeof(IP4HEADER) + (sizeof(UDPHEADER))
 
@@ -67,7 +68,7 @@ void SaturateServo::recv( void )
     int64_t rtt_ns = contents->recv_timestamp - contents->sent_timestamp;
     double rtt = rtt_ns / 1.e9;
 
-    fprintf( _log_file, "%s ACK RECEIVED senderid=%d, seq=%d, send_time=%ld,  recv_time=%ld, rtt=%.4f, %d => ",
+    fprintf( _log_file, "%s ACK RECEIVED senderid=%" PRId32 ", seq=%" PRId32 ", send_time=%" PRId64 ",  recv_time=%" PRId64 ", rtt=%.4f, %" PRId32 " => ",
        _name.c_str(),_server ? _foreign_id : contents->sender_id , contents->ack_number, contents->sent_timestamp, contents->recv_timestamp, (double)rtt,  _window );
     /* increase-decrease rules */
 
@@ -88,7 +89,7 @@ uint64_t SaturateServo::wait_time( void ) const
   int num_outstanding = _packets_sent - _max_ack_id - 1;
 
   if ( _remote == UNKNOWN ) {
-    return 1000000000;
+    return (uint64_t) 1000000000;
   }
 
   if ( num_outstanding < _window ) {
