@@ -7,6 +7,7 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include <assert.h>
+#include <inttypes.h>
 
 #include "packetsocket.hh"
 
@@ -81,15 +82,13 @@ vector< string > PacketSocket::recv_raw( void )
     perror( "recvfrom" );
     exit( 1 );
   } else if ( bytes_read > BUFFER_SIZE ) {
-    fprintf( stderr, "Received size (%ld) too long (> %d)!\n",
+    fprintf( stderr, "Received size (%" PRId64 ") too long (> %" PRId32 ")!\n",
 	     bytes_read, BUFFER_SIZE );
     exit( 1 );
   }
 
-  if ( source_address_len != 18 ) {
-    fprintf( stderr, "address length = %d\n",
-	     source_address_len );
-    perror( "recvfrom (unexpected address length)" );
+  if ( source_address_len != sizeof( source_address ) ) {
+    perror( "recvfrom (unexpected address length" );
     exit( 1 );
   }
 

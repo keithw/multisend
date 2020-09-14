@@ -38,7 +38,7 @@ public:
     {}
 
     Packet( const Address &s_addr, const std::string &s_payload, const struct timespec &ts )
-      : addr( s_addr ), payload( s_payload ), timestamp( ts.tv_sec * 1000000000 + ts.tv_nsec )
+      : addr( s_addr ), payload( s_payload ), timestamp( ts.tv_sec * (uint64_t) 1000000000 + ts.tv_nsec )
     {}
   };
 

@@ -3,6 +3,7 @@
 #include "acker.hh"
 #include "payload.hh"
 #include "saturateservo.hh"
+#include <inttypes.h>
 
 Acker::Acker( const char *s_name, FILE* log_file_handle, const Socket & s_listen, const Socket & s_send, const Socket::Address & s_remote, const bool s_server, const int s_ack_id )
   : _name( s_name ), 
@@ -50,7 +51,7 @@ void Acker::recv( void )
   outgoing.ack_number = contents->sequence_number;
   _send.send( Socket::Packet( _remote, outgoing.str( sizeof( SatPayload ) ) ) );
 
-   fprintf( _log_file,"%s DATA RECEIVED senderid=%d, seq=%d, send_time=%ld, recv_time=%ld, 1delay=%.4f \n",
+   fprintf( _log_file,"%s DATA RECEIVED senderid=%" PRId32 ", seq=%" PRId32 ", send_time=%" PRId64 ", recv_time=%" PRId64 ", 1delay=%.4f \n",
       _name.c_str(),  _server ? contents->sender_id : _ack_id, contents->sequence_number, contents->sent_timestamp, contents->recv_timestamp,oneway ); 
 }
 
@@ -83,7 +84,7 @@ void Acker::tick( void )
 uint64_t Acker::wait_time( void ) const
 {
   if ( _server ) {
-    return 1000000000;
+    return (uint64_t) 1000000000;
   }
 
   int diff = _next_ping_time - Socket::timestamp();

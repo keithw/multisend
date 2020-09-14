@@ -21,7 +21,7 @@ private:
 
   uint64_t _next_ping_time;
 
-  static const int _ping_interval = 1000000000;
+  static const uint32_t _ping_interval = 1000000000;
 
   int _foreign_id;
 
