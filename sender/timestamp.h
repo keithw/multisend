@@ -33,6 +33,8 @@
 #ifndef TIMESTAMP_HPP
 #define TIMESTAMP_HPP
 
+#include <time.h>
+
 uint64_t timestamp( void )
 {
   struct timespec ts;
