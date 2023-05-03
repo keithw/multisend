@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <inttypes.h>
 
 #include "acker.hh"
 #include "saturateservo.hh"
@@ -54,7 +55,7 @@ int main( int argc, char *argv[] )
 
   FILE* log_file;
   char log_file_name[50];
-  sprintf(log_file_name,"%s-%d-%d",server ? "server" : "client",(int)(ts/1e9),sender_id);
+  sprintf(log_file_name,"%s-%" PRId32 "-%" PRId32 "",server ? "server" : "client",(int)(ts/1e9),sender_id);
   log_file=fopen(log_file_name,"w");
 
   SaturateServo saturatr( "OUTGOING", log_file, feedback_socket, data_socket, remote_data_address, server, sender_id );
@@ -81,11 +82,11 @@ int main( int argc, char *argv[] )
     uint64_t next_transmission_delay = std::min( saturatr.wait_time(), acker.wait_time() );
 
     if ( next_transmission_delay == 0 ) {
-      fprintf( stderr, "ZERO %ld %ld\n", saturatr.wait_time(), acker.wait_time() );
+      fprintf( stderr, "ZERO %" PRId64 " %" PRId64 "\n", saturatr.wait_time(), acker.wait_time() );
     }
 
-    timeout.tv_sec = next_transmission_delay / 1000000000;
-    timeout.tv_nsec = next_transmission_delay % 1000000000;
+    timeout.tv_sec = next_transmission_delay / (uint64_t)1000000000;
+    timeout.tv_nsec = next_transmission_delay % (uint64_t)1000000000;
     ppoll( poll_fds, 2, &timeout, NULL );
 
     if ( poll_fds[ 0 ].revents & POLLIN ) {

@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <inttypes.h>
 
 #include "delay-servo.hh"
 
@@ -37,7 +38,7 @@ void DelayServo::recv( void )
     _hist.packet_received( *contents );
     _packets_received++;
     double loss_rate = (double) _hist.num_lost() / (double) _packets_sent;
-    printf( "%s seq = %d delay = %f recvrate = %f queueest = %f outstanding = %d Mbps = %f lost = %.5f%% arrivemilli = %ld\n",
+    printf( "%s seq = %" PRId32 " delay = %f recvrate = %f queueest = %f outstanding = %" PRId32 " Mbps = %f lost = %.5f%% arrivemilli = %" PRId64 "\n",
 	    _name.c_str(),
 	    contents->sequence_number,
 	    (double) (contents->recv_timestamp - contents->sent_timestamp) / 1.0e9,

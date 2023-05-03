@@ -3,7 +3,7 @@ objects = socket.o hist.o rate-estimate.o payload.o history.o delay-servo.o acke
 executables = send1way buffer-setpoint controlled-delay saturatr cellsim cellsim-tap
 
 CXX = g++
-CXXFLAGS = -g -O3 -std=c++0x -ffast-math -pedantic -Werror -Wall -Wextra -Weffc++ -fno-default-inline -pipe -D_FILE_OFFSET_BITS=64 -D_XOPEN_SOURCE=500 -D_GNU_SOURCE
+CXXFLAGS = -g -O3 -std=c++0x -ffast-math -pedantic -Wall -Wextra -Weffc++ -fno-default-inline -pipe -D_FILE_OFFSET_BITS=64 -D_XOPEN_SOURCE=500 -D_GNU_SOURCE
 LIBS = -lm -lrt
 
 all: $(executables)
